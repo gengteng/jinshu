@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package comet;
+
+import "domain/message.proto";
+
+message PushResult {
+  bool ok = 1;
+  oneof result {
+    string value = 2;
+    string error = 3;
+  }
+}
+
+service Comet {
+  rpc Push(domain.message.Message) returns (PushResult) {};
+}

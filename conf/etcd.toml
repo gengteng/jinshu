@@ -1,0 +1,4 @@
+[etcd]
+namespace = "jinshu"
+endpoints = "localhost:2379"
+ttl = 10

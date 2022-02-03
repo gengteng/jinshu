@@ -1,0 +1,29 @@
+[package]
+name = "jinshu-sdk"
+version = "0.1.0"
+authors = ["Geng Teng <me@gteng.org>"]
+description = "Instant Messaging System"
+homepage = "https://jinshu.io"
+readme = "README.md"
+keywords = ["instant messaging"]
+license = "MIT"
+repository = "https://github.com/gengteng/jinshu"
+edition = "2021"
+
+[dependencies]
+jinshu-utils = { path = "../jinshu-utils" }
+jinshu-protocol = { path = "../jinshu-protocol" }
+futures = "0.3"
+tokio = { version = "~1.16.1", features = ["full"] }
+tokio-util = { version = "0.6", features = ["codec"]}
+#reqwest = { version = "0.11", features = ["serde_json"]}
+anyhow = "1"
+clap = "3"
+mime = "0.3"
+log = "0.4"
+env_logger = "0.9"
+uuid = { version = "1.0.0-alpha.1", features = ["serde", "v4", "fast-rng"]}
+
+[[bin]]
+path = "src/client.rs"
+name = "jinshu-cli"

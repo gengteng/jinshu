@@ -1,0 +1,40 @@
+[package]
+name = "jinshu-rpc"
+version = "0.1.0"
+authors = ["Geng Teng <me@gteng.org>"]
+description = "Instant Messaging System"
+homepage = "https://jinshu.io"
+readme = "README.md"
+keywords = ["instant messaging"]
+license = "MIT"
+repository = "https://github.com/gengteng/jinshu"
+edition = "2021"
+
+[dependencies]
+jinshu-utils = { path = "../jinshu-utils" }
+jinshu-protocol = { path = "../jinshu-protocol" }
+tokio = { version = "~1.16.1", features = ["rt", "signal"]}
+tokio-stream = { version = "0.1", features = ["net"] }
+tracing = "0.1"
+tonic = "0.6"
+prost = "0.9"
+futures = "0.3"
+hyper = { version = "~0.14.16", features = ["tcp"]}
+tower = "0.4"
+tower-http = { version = "0.2", features = ["trace"] }
+async-trait = "0.1"
+etcd-client = "0.8"
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+http = "0.2"
+uuid = "1.0.0-alpha.1"
+
+[build-dependencies]
+anyhow = "1"
+tonic-build = { version = "0.6", features = ["prost"] }
+
+[dev-dependencies]
+rand = "0.8"
+uuid = { version = "1.0.0-alpha.1", features = ["v4"]}
+tokio = { version = "~1.16.1", features = ["macros", "rt-multi-thread", "sync"]}
+tokio-stream = { version = "0.1", features = ["sync"] }

@@ -1,0 +1,26 @@
+[package]
+name = "jinshu-queue"
+version = "0.1.0"
+authors = ["Geng Teng <me@gteng.org>"]
+description = "Instant Messaging System"
+homepage = "https://jinshu.io"
+readme = "README.md"
+keywords = ["instant messaging"]
+license = "MIT"
+repository = "https://github.com/gengteng/jinshu"
+edition = "2021"
+
+[dependencies]
+jinshu-utils = { path = "../jinshu-utils" }
+jinshu-protocol = { path = "../jinshu-protocol" }
+jinshu-rpc = { path = "../jinshu-rpc" }
+rdkafka = { version = "0.28", features = ["cmake-build"] }
+pulsar = { version = "4.1", default-features = false, features = ["compression", "tokio-runtime"]}
+tracing = "0.1"
+async-trait = "0.1"
+tokio = { version = "~1.16.1", features = ["full"]}
+tokio-stream = "0.1"
+serde = { version = "1", features = ["derive"] }
+url = { version = "2.2", features = ["serde"]}
+thiserror = "1"
+uuid = "1.0.0-alpha.1"

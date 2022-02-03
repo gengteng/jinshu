@@ -1,0 +1,115 @@
+[tracing]
+level = "INFO"
+path = "./log"
+trigger_size = "1MiB"
+archived_count = 32
+
+[etcd]
+namespace = "jinshu"
+endpoints = "localhost:2379"
+ttl = 10
+
+[receiver]
+# Service name
+service_name = "receiver"
+# Service public host
+public_host = "0.0.0.0"
+# Receiver service ip
+listen_ip = "0.0.0.0"
+# Receiver service port
+listen_port = 9100
+
+[comet]
+# Comet ip
+ip = "0.0.0.0"
+# Comet port
+port = 9000
+# Codec: json | msgpack | cbro | flexbuffers
+codec = "cbor"
+# Receiver service name
+receiver_name = "receiver"
+# Authorizer service name
+authorizer_name = "authorizer"
+
+[comet.service]
+# Service name
+service_name = "comet"
+# Service public host
+public_host = "0.0.0.0"
+# Comet service ip
+listen_ip = "0.0.0.0"
+# Comet service port
+listen_port = 9400
+
+[authorizer]
+# Service name
+service_name = "authorizer"
+# Service public host
+public_host = "0.0.0.0"
+# Authorizer service ip
+listen_ip = "0.0.0.0"
+# Authorizer service port
+listen_port = 9300
+
+[distributor]
+pusher_name = "pusher"
+storage_name = "storage"
+
+[gateway]
+# Gateway service ip
+ip = "0.0.0.0"
+# Gateway service port
+port = 9200
+
+[pusher]
+comet_name = "comet"
+
+[database]
+#url = "postgres://jinshu:1qaz2wsx@localhost/jinshu"
+schema = "postgres"
+username = "jinshu"
+password = "1qaz2wsx"
+host = "localhost"
+port = 5432
+path = "jinshu"
+max_connections = 100
+min_connections = 5
+connect_timeout_ms = 8000
+idle_timeout_ms = 8000
+sqlx_log = true
+
+[redis]
+schema = "redis"
+host = "127.0.0.1"
+port = 6379
+password = "1qaz2wsx"
+db_number = 0
+max_connections = 16
+
+[kafka]
+servers = "localhost:9092"
+topic = "jinshu.dev"
+
+# Producer config
+message_timeout = 3000
+
+# Consumer config
+group_id = "jinshu.group"
+partition_eof = false
+auto_offset_reset = "earliest"
+session_timeout_ms = 300000
+auto_commit = false
+
+#[pulsar]
+#url = "pulsar://localhost:6650"
+#topic = "persistent://public/default/jinshu.dev"
+#
+## Consumer config
+#subscription_type = "keyshared"
+
+# App server demo config
+[app]
+ip = "0.0.0.0"
+port = 8765
+gateway_host = "127.0.0.1"
+gateway_port = 9200

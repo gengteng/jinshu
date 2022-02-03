@@ -1,0 +1,17 @@
+[package]
+name = "jinshu-storage"
+version = "0.1.0"
+authors = ["Geng Teng <me@gteng.org>"]
+description = "Instant Messaging System"
+homepage = "https://jinshu.io"
+readme = "README.md"
+keywords = ["instant messaging"]
+license = "MIT"
+repository = "https://github.com/gengteng/jinshu"
+edition = "2021"
+
+[dependencies]
+#tokio = { version = "~1.16.1", features = ["full"] }
+#sqlx = { version = "0.5", features = ["runtime-tokio-rustls", "postgres", "mysql", "sqlite"]}
+#mongodb = "2"
+#anyhow = "1"

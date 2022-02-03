@@ -1,0 +1,9 @@
+[receiver]
+# Service name
+service_name = "receiver"
+# Service public host
+public_host = "0.0.0.0"
+# Receiver service ip
+listen_ip = "0.0.0.0"
+# Receiver service port
+listen_port = 9100

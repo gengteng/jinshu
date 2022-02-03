@@ -1,0 +1,6 @@
+[pulsar]
+url = "pulsar://localhost:6650"
+topic = "persistent://public/default/jinshu.dev"
+
+# Consumer config
+subscription_type = "keyshared"

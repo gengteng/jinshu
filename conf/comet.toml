@@ -1,0 +1,21 @@
+[comet]
+# Comet ip
+ip = "0.0.0.0"
+# Comet port
+port = 9000
+# Codec: json | msgpack | cbro | flexbuffers
+codec = "cbor"
+# Receiver service name
+receiver_name = "receiver"
+# Authorizer service name
+authorizer_name = "authorizer"
+
+[comet.service]
+# Service name
+service_name = "comet"
+# Service public host
+public_host = "0.0.0.0"
+# Comet service ip
+listen_ip = "0.0.0.0"
+# Comet service port
+listen_port = 9400

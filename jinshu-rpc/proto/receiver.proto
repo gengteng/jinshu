@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package receiver;
+
+import "domain/message.proto";
+
+message EnqueueResult {
+  bool ok = 1;
+  oneof result {
+    string value = 2;
+    string error = 3;
+  }
+}
+
+service Receiver {
+  rpc Enqueue(domain.message.Message) returns (EnqueueResult) {};
+}

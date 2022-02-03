@@ -1,0 +1,30 @@
+[package]
+name = "jinshu-pusher"
+version = "0.1.0"
+authors = ["Geng Teng <me@gteng.org>"]
+description = "Instant Messaging System"
+homepage = "https://jinshu.io"
+readme = "README.md"
+keywords = ["instant messaging"]
+license = "MIT"
+repository = "https://github.com/gengteng/jinshu"
+edition = "2021"
+
+[dependencies]
+jinshu-tracing = { path = "../jinshu-tracing" }
+jinshu-utils = { path = "../jinshu-utils" }
+jinshu-rpc = { path = "../jinshu-rpc" }
+jinshu-common = { path = "../jinshu-common" }
+jinshu-queue = { path = "../jinshu-queue" }
+jinshu-redis = { path = "../jinshu-redis" }
+tokio = { version = "~1.16.1", features = ["full"]}
+tokio-stream = "0.1.8"
+async-trait = "0.1"
+serde = { version = "1", features = ["derive"] }
+uuid = { version = "1.0.0-alpha.1", features = ["serde", "v4", "fast-rng"]}
+#rdkafka = { version = "0.28", features = ["cmake-build"] }
+tracing = "0.1"
+tonic = "0.6"
+tower = { version = "0.4", features = ["discover"] }
+anyhow = "1"
+dashmap = "5"

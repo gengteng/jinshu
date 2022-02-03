@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package authorizer;
+
+message Token {
+  string user_id = 1;
+  string token = 2;
+}
+
+message SignInResult {
+  bool ok = 1;
+  optional string extension = 2;
+}
+
+service Authorizer {
+  rpc SignIn(Token) returns (SignInResult) {};
+}

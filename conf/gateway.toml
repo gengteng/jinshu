@@ -1,0 +1,5 @@
+[gateway]
+# Gateway service ip
+ip = "0.0.0.0"
+# Gateway service port
+port = 9200

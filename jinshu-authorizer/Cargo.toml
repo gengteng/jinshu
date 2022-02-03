@@ -1,0 +1,27 @@
+[package]
+name = "jinshu-authorizer"
+version = "0.1.0"
+authors = ["Geng Teng <me@gteng.org>"]
+description = "Instant Messaging System"
+homepage = "https://jinshu.io"
+readme = "README.md"
+keywords = ["instant messaging"]
+license = "MIT"
+repository = "https://github.com/gengteng/jinshu"
+edition = "2021"
+
+[dependencies]
+jinshu-utils = { path = "../jinshu-utils" }
+jinshu-common = { path = "../jinshu-common" }
+jinshu-rpc = { path = "../jinshu-rpc" }
+jinshu-tracing = { path = "../jinshu-tracing" }
+jinshu-redis = { path = "../jinshu-redis" }
+tracing = { version = "0.1"}
+anyhow = "1"
+uuid = { version = "1.0.0-alpha.1", features = ["serde", "v4", "fast-rng"]}
+tokio = { version = "~1.16.1", features = ["full"]}
+tonic = "0.6"
+deadpool-redis = "0.10"
+serde_json = "1"
+serde = { version = "1", features = ["derive"] }
+

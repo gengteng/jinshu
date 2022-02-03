@@ -1,0 +1,15 @@
+[package]
+name = "jinshu-api"
+version = "0.1.0"
+authors = ["Geng Teng <me@gteng.org>"]
+description = "Instant Messaging System"
+homepage = "https://jinshu.io"
+readme = "README.md"
+keywords = ["instant messaging"]
+license = "MIT"
+repository = "https://github.com/gengteng/jinshu"
+edition = "2021"
+
+[dependencies]
+#tokio = { version = "~1.16.1", features = ["full"]}
+#axum = "0.4"

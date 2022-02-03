@@ -1,0 +1,165 @@
+version: "3.9"
+services:
+  etcd:
+    image: quay.io/coreos/etcd
+    container_name: jinshu-etcd
+    environment:
+      ETCDCTL_API: 3
+    restart: always
+    command: /usr/local/bin/etcd --name etcd0 --data-dir /etcd-data --listen-client-urls http://0.0.0.0:2379 --advertise-client-urls http://0.0.0.0:2379 --listen-peer-urls http://0.0.0.0:2380 --initial-advertise-peer-urls http://0.0.0.0:2380 --initial-cluster etcd0=http://0.0.0.0:2380 --initial-cluster-token tkn --initial-cluster-state new
+    stop_signal: SIGTERM
+
+  redis:
+    image: redis
+    container_name: jinshu-redis
+    restart: always
+    sysctls:
+      net.core.somaxconn: 1024
+    command: redis-server --requirepass 1qaz2wsx --appendonly yes
+    stop_signal: SIGTERM
+
+  postgres:
+    image: postgres
+    container_name: jinshu-postgres
+    environment:
+      - POSTGRES_USER=jinshu
+      - POSTGRES_PASSWORD=1qaz2wsx
+      - POSTGRES_DB=jinshu
+    volumes:
+      - ./script/create_table.sql:/docker-entrypoint-initdb.d/init.sql
+    stop_signal: SIGTERM
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: jinshu-zookeeper
+    stop_signal: SIGTERM
+
+  kafka:
+    image: wurstmeister/kafka
+    container_name: jinshu-kafka
+    environment:
+      KAFKA_BROKER_ID: 0
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_CREATE_TOPICS: "jinshu.dev:2:1"
+    depends_on:
+      - zookeeper
+    stop_signal: SIGTERM
+
+  receiver:
+    build: ./jinshu-receiver
+    container_name: jinshu-receiver
+    environment:
+      JINSHU_ETCD__ENDPOINTS: "etcd:2379"
+      JINSHU_KAFKA__SERVERS: "kafka:9092"
+    links:
+      - etcd
+      - zookeeper
+      - kafka
+    depends_on:
+      - etcd
+      - kafka
+    stop_signal: SIGTERM
+
+  authorizer:
+    build: ./jinshu-authorizer
+    container_name: jinshu-authorizer
+    environment:
+      JINSHU_ETCD__ENDPOINTS: "etcd:2379"
+      JINSHU_REDIS__HOST: "redis"
+    links:
+      - etcd
+      - redis
+    depends_on:
+      - etcd
+      - redis
+    stop_signal: SIGTERM
+
+  comet:
+    build: ./jinshu-comet
+    container_name: jinshu-comet
+    environment:
+      JINSHU_ETCD__ENDPOINTS: "etcd:2379"
+      JINSHU_REDIS__HOST: "redis"
+    ports:
+      - "9000:9000"
+      - "9400:9400"
+    links:
+      - etcd
+      - redis
+      - authorizer
+      - receiver
+    depends_on:
+      - etcd
+      - redis
+    stop_signal: SIGTERM
+
+#  storage:
+#    build: ./jinshu-storage
+#    container_name: jinshu-storage
+#    environment:
+#      JINSHU_KAFKA__SERVERS: "kafka:9092"
+#    links:
+#      - zookeeper
+#      - kafka
+#    depends_on:
+#      - kafka
+#    stop_signal: SIGTERM
+
+  pusher:
+    build: ./jinshu-pusher
+    container_name: jinshu-pusher
+    environment:
+      JINSHU_REDIS__HOST: "redis"
+      JINSHU_KAFKA__SERVERS: "kafka:9092"
+      JINSHU_ETCD__ENDPOINTS: "etcd:2379"
+      JINSHU_KAFKA__GROUP_ID: "jinshu.pusher"
+    links:
+      - etcd
+      - zookeeper
+      - kafka
+      - redis
+      - comet
+    depends_on:
+      - etcd
+      - kafka
+      - redis
+      - comet
+    stop_signal: SIGTERM
+
+  gateway:
+    build: ./jinshu-gateway
+    container_name: jinshu-gateway
+    environment:
+      JINSHU_DATABASE__HOST: "postgres"
+      JINSHU_REDIS__HOST: "redis"
+    ports:
+      - "9200:9200"
+    links:
+      - postgres
+      - redis
+    depends_on:
+      - postgres
+      - redis
+    stop_signal: SIGTERM
+
+# example
+  app-server:
+    build: ./jinshu-gateway/examples
+    container_name: app-server
+    environment:
+      JINSHU_REDIS__HOST: "redis"
+      JINSHU_DATABASE__HOST: "postgres"
+      JINSHU_APP__GATEWAY_HOST: "gateway"
+    ports:
+      - "8765:8765"
+    links:
+      - redis
+      - postgres
+      - gateway
+    depends_on:
+      - redis
+      - postgres
+      - gateway
+    stop_signal: SIGTERM

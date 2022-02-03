@@ -1,0 +1,16 @@
+[package]
+name = "jinshu-database"
+version = "0.1.0"
+authors = ["Geng Teng <me@gteng.org>"]
+description = "Instant Messaging System"
+homepage = "https://jinshu.io"
+readme = "README.md"
+keywords = ["instant messaging"]
+license = "MIT"
+repository = "https://github.com/gengteng/jinshu"
+edition = "2021"
+
+[dependencies]
+jinshu-utils = { path = "../jinshu-utils" }
+sea-orm = { version = "0.5", features = ["macros", "sqlx-postgres", "sqlx-mysql", "runtime-tokio-rustls"], default-features = false }
+serde = { version = "1", features = ["derive"]}

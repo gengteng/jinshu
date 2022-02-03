@@ -1,0 +1,19 @@
+[package]
+name = "jinshu-redis"
+version = "0.1.0"
+authors = ["Geng Teng <me@gteng.org>"]
+description = "Instant Messaging System"
+homepage = "https://jinshu.io"
+readme = "README.md"
+keywords = ["instant messaging"]
+license = "MIT"
+repository = "https://github.com/gengteng/jinshu"
+edition = "2021"
+
+[dependencies]
+jinshu-utils = { path = "../jinshu-utils" }
+uuid = { version = "1.0.0-alpha.1", features = ["v4"] }
+serde = { version = "1", features = ["derive"] }
+redis = "0.21"
+deadpool-redis = "0.10"
+thiserror = "1"

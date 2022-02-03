@@ -1,0 +1,23 @@
+[workspace]
+members = [
+    "jinshu-utils",
+    "jinshu-protocol",
+    "jinshu-sdk",
+    "jinshu-database",
+    "jinshu-redis",
+    "jinshu-queue",
+    "jinshu-tracing",
+    "jinshu-common",
+    "jinshu-rpc",
+    "jinshu-api",
+    "jinshu-comet",
+    "jinshu-receiver",
+    "jinshu-gateway",
+    "jinshu-pusher",
+    "jinshu-timer",
+    "jinshu-admin",
+    "jinshu-storage",
+    "jinshu-authorizer",
+    "jinshu-file"
+]
+resolver = "2"

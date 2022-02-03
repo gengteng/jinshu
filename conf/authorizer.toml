@@ -1,0 +1,9 @@
+[authorizer]
+# Service name
+service_name = "authorizer"
+# Service public host
+public_host = "0.0.0.0"
+# Authorizer service ip
+listen_ip = "0.0.0.0"
+# Authorizer service port
+listen_port = 9300

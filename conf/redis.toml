@@ -1,0 +1,7 @@
+[redis]
+schema = "redis"
+host = "localhost"
+port = 6379
+password = "1qaz2wsx"
+db_number = 0
+max_connections = 16

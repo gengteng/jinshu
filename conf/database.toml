@@ -1,0 +1,13 @@
+[database]
+#url = "postgres://jinshu:1qaz2wsx@localhost/jinshu"
+schema = "postgres"
+username = "jinshu"
+password = "1qaz2wsx"
+host = "localhost"
+port = 5432
+path = "jinshu"
+max_connections = 16
+min_connections = 10
+connect_timeout_ms = 8000
+idle_timeout_ms = 8000
+sqlx_log = true

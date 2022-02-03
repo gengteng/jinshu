@@ -1,0 +1,30 @@
+[package]
+name = "jinshu-receiver"
+version = "0.1.0"
+authors = ["Geng Teng <me@gteng.org>"]
+description = "Instant Messaging System"
+homepage = "https://jinshu.io"
+readme = "README.md"
+keywords = ["instant messaging"]
+license = "MIT"
+repository = "https://github.com/gengteng/jinshu"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "~1.16.1", features = ["full"]}
+jinshu-common = { path = "../jinshu-common" }
+jinshu-rpc = { path = "../jinshu-rpc" }
+jinshu-utils = { path = "../jinshu-utils" }
+jinshu-tracing = { path = "../jinshu-tracing" }
+jinshu-queue = { path = "../jinshu-queue" }
+futures = "0.3"
+tonic = "0.6"
+anyhow = "1"
+url = "2.2"
+config = "0.11"
+tracing = "0.1"
+serde = { version = "1", features = ["derive"] }
+rdkafka = { version = "0.28", features = ["cmake-build"] }
+pulsar = { version = "4.1", default-features = false, features = ["compression", "tokio-runtime"]}

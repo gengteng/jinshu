@@ -1,0 +1,13 @@
+[kafka]
+servers = "localhost:9092"
+topic = "jinshu.dev"
+
+# Producer config
+message_timeout = 3000
+
+# Consumer config
+group_id = "jinshu.group"
+partition_eof = false
+auto_offset_reset = "earliest"
+session_timeout_ms = 300000
+auto_commit = false

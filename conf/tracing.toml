@@ -1,0 +1,5 @@
+[tracing]
+level = "INFO"
+path = "./log"
+trigger_size = "1MiB"
+archived_count = 32

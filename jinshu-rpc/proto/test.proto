@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package test;
+
+message Ping {
+  int32 syn = 1;
+}
+
+message Pong {
+  int32 ack = 1;
+}
+
+service Test {
+  rpc test(Ping) returns (Pong) {};
+}
