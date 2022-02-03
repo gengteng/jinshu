@@ -554,13 +554,7 @@ mod test {
         let result = Vec::try_from(&content);
         assert!(result.is_ok());
 
-        match Content::try_from(result.unwrap().as_slice()) {
-            Ok(Content::Data { mime, bytes }) => {
-                assert_eq!(mime, mime::TEXT_PLAIN_UTF_8);
-                assert_eq!(bytes, text);
-            }
-            Err(e) => assert!(false, "{}", e),
-            unreachable => assert!(false, "Content::try_from test failed: {:?}", unreachable),
-        }
+        assert!(matches!(Content::try_from(result.unwrap().as_slice()),
+                Ok(Content::Data { mime, bytes }) if mime == mime::TEXT_PLAIN_UTF_8 && bytes == text));
     }
 }
