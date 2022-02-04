@@ -8,14 +8,13 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
     pub id: String,
+    pub timestamp: DateTime,
     #[sea_orm(column_type = "Text")]
-    pub sender_id: String,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub receiver_id: Option<String>,
-    pub r#type: i32,
+    pub from: String,
     #[sea_orm(column_type = "Text")]
-    pub content: String,
-    pub send_time: DateTime,
+    pub to: String,
+    pub content: Json,
+    pub store_time: DateTime,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter)]

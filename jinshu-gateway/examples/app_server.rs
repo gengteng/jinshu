@@ -156,15 +156,20 @@ async fn sign_up(
     tracing::info!(?param.username);
     let user_id = Uuid::new_v4();
 
-    let salt = SaltString::generate(&mut OsRng);
-    let password = argon2::Argon2::default()
-        .hash_password(param.password.expose().as_bytes(), &salt)
-        .map_err(internal_error)?;
+    let password = tokio::task::spawn_blocking(move || {
+        let salt = SaltString::generate(&mut OsRng);
+        argon2::Argon2::default()
+            .hash_password(param.password.expose().as_bytes(), &salt)
+            .map(|h| h.to_string())
+    })
+    .await
+    .map_err(internal_error)?
+    .map_err(internal_error)?;
 
     let model = app_user::ActiveModel {
         id: Set(user_id.as_simple().to_string()),
         username: Set(param.username),
-        password: Set(password.to_string()),
+        password: Set(password),
         gender: Set(param.gender as i32),
         ..Default::default()
     };
@@ -241,10 +246,20 @@ async fn sign_in(
     if let Some(app_user) = query {
         let app_user_id: Uuid = app_user.id.parse().map_err(internal_error)?;
 
-        let hash = PasswordHash::new(&app_user.password).map_err(internal_error)?;
-        let valid = argon2::Argon2::default()
-            .verify_password(param.password.expose().as_bytes(), &hash)
-            .is_ok();
+        let valid = tokio::task::spawn_blocking(move || {
+            let hash = match PasswordHash::new(&app_user.password) {
+                Ok(hash) => hash,
+                Err(error) => {
+                    tracing::error!(%error, "Failed to create PasswordHash");
+                    return false;
+                }
+            };
+            argon2::Argon2::default()
+                .verify_password(param.password.expose().as_bytes(), &hash)
+                .is_ok()
+        })
+        .await
+        .map_err(internal_error)?;
 
         if valid {
             if let Some(jinshu_id) = app_user.jinshu_id {

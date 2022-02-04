@@ -95,17 +95,21 @@ services:
       - redis
     stop_signal: SIGTERM
 
-#  storage:
-#    build: ./jinshu-storage
-#    container_name: jinshu-storage
-#    environment:
-#      JINSHU_KAFKA__SERVERS: "kafka:9092"
-#    links:
-#      - zookeeper
-#      - kafka
-#    depends_on:
-#      - kafka
-#    stop_signal: SIGTERM
+  storage:
+    build: ./jinshu-storage
+    container_name: jinshu-storage
+    environment:
+      JINSHU_KAFKA__SERVERS: "kafka:9092"
+      JINSHU_KAFKA__GROUP_ID: "jinshu.storage"
+      JINSHU_DATABASE__HOST: "postgres"
+    links:
+      - zookeeper
+      - kafka
+      - postgres
+    depends_on:
+      - kafka
+      - postgres
+    stop_signal: SIGTERM
 
   pusher:
     build: ./jinshu-pusher

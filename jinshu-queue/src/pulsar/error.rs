@@ -7,7 +7,7 @@ pub enum Error {
     #[error(transparent)]
     InvalidUtf8(#[from] std::str::Utf8Error),
     #[error(transparent)]
-    Deserialize(#[from] crate::Error),
+    Convert(#[from] crate::error::ConvertError),
     #[error(transparent)]
     Pulsar(#[from] pulsar::Error),
     #[error(transparent)]

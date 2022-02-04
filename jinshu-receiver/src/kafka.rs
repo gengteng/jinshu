@@ -37,7 +37,7 @@ impl receiver_server::Receiver for KafkaReceiver {
             .0
             .send(
                 FutureRecord::to(&self.1)
-                    .key(message.0.id.as_slice())
+                    .key(message.inner().id.as_slice())
                     .payload(&Vec::<u8>::from(&message)),
                 Duration::from_secs(0),
             )

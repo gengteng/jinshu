@@ -42,6 +42,8 @@ $ docker build -t jinshu .
 $ docker-compose -f docker-compose.yml up -d
 ```
 
+注意：Kafka 的 topic 创建可能较慢，导致 pusher、storage 消费节点异常退出，请在 topic 创建完成后重启这些节点。
+
 ### 本地编译运行
 
 ### 编译
@@ -148,8 +150,6 @@ $ ./target/debug/jinshu-cli -u <user2_id> -t <user2_token> -r <user1_id>
 
 # 查看 jinshu-cli 发送及接收消息的输出，以及 comet、receiver、authorizer、distributor 的日志
 ```
-
-注：目前消息还无法实现消息推送，仅实现注册、登录、消息接收、消息入队、消息出队。
 
 ## 功能模块
 

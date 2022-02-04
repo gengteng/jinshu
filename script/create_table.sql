@@ -41,14 +41,14 @@ alter table block
 
 create table message
 (
-    id          text                    not null
+    id         text                    not null
         constraint message_pk
             primary key,
-    sender_id   text                    not null,
-    receiver_id text,
-    type        integer                 not null,
-    content     text                    not null,
-    send_time   timestamp default now() not null
+    timestamp  timestamp               not null,
+    "from"     text                    not null,
+    "to"       text                    not null,
+    content    json                    not null,
+    store_time timestamp default now() not null
 );
 
 alter table message

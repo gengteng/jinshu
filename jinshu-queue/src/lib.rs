@@ -1,4 +1,3 @@
-pub use error::*;
 use jinshu_rpc::domain::message::Message as RpcMessage;
 use std::borrow::Cow;
 use std::fmt::Debug;
@@ -6,7 +5,7 @@ use std::mem::size_of;
 use uuid::Uuid;
 
 pub mod config;
-mod error;
+pub mod error;
 pub mod kafka;
 pub mod pulsar;
 
@@ -25,7 +24,7 @@ pub enum HandleResult {
 }
 
 #[derive(Debug, Clone)]
-pub struct QueuedMessage(pub RpcMessage);
+pub struct QueuedMessage(RpcMessage);
 
 impl QueuedMessage {
     pub fn new(message: RpcMessage) -> Self {
@@ -45,12 +44,12 @@ const CONTENT_LEN_OFFSET: u64 = size_of::<Uuid>() as u64 * 3 + 8; // id + ts + f
 const CONTENT_LEN_END: u64 = CONTENT_LEN_OFFSET + size_of::<u64>() as u64; // CONTENT_LEN_OFFSET + size of content len (u64)
 
 impl TryFrom<&[u8]> for QueuedMessage {
-    type Error = crate::Error;
+    type Error = crate::error::ConvertError;
 
-    fn try_from(value: &[u8]) -> Result<Self> {
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
         let len = value.len() as u64;
         if len < CONTENT_LEN_END {
-            return Err(crate::Error::InsufficientBuffer(len));
+            return Err(Self::Error::InsufficientBuffer(len));
         }
 
         let content_len = (&value[CONTENT_LEN_OFFSET as usize..CONTENT_LEN_END as usize])
@@ -60,7 +59,7 @@ impl TryFrom<&[u8]> for QueuedMessage {
 
         let expected_content_len = len - CONTENT_LEN_END;
         if expected_content_len != content_len {
-            return Err(crate::Error::InvalidContentLength(
+            return Err(Self::Error::InvalidContentLength(
                 content_len,
                 expected_content_len,
             ));

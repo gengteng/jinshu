@@ -4,9 +4,9 @@ mod pusher;
 use crate::config::PusherConfig;
 use crate::pusher::Pusher;
 use jinshu_common::Config;
-use jinshu_queue::config::QueueConfig;
-use jinshu_queue::kafka::{KafkaConsumer, KafkaConsumerConfig};
-use jinshu_queue::pulsar::{PulsarConsumer, PulsarConsumerConfig};
+use jinshu_queue::config::{consume_with_handler, QueueConfig};
+use jinshu_queue::kafka::KafkaConsumerConfig;
+use jinshu_queue::pulsar::PulsarConsumerConfig;
 use jinshu_redis::config::RedisConfig;
 use jinshu_redis::session::SessionStore;
 use jinshu_rpc::registry::etcd::{EtcdConfig, EtcdRegistry};
@@ -47,20 +47,7 @@ async fn main() -> anyhow::Result<()> {
 
     let pusher = Pusher::new(&pusher.comet_name, &etcd, session_store).await?;
 
-    match queue {
-        QueueConfig::Kafka(config) => {
-            let mut kafka_consumer = KafkaConsumer::new(&config).await?;
-            kafka_consumer
-                .start_with_shutdown(pusher, shutdown_signal())
-                .await?;
-        }
-        QueueConfig::Pulsar(config) => {
-            let mut pulsar_consumer = PulsarConsumer::new(&config).await?;
-            pulsar_consumer
-                .start_with_shutdown(pusher, shutdown_signal())
-                .await?;
-        }
-    }
+    consume_with_handler(queue, pusher, shutdown_signal()).await?;
 
     Ok(())
 }
