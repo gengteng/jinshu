@@ -27,7 +27,7 @@ async-trait = "0.1"
 config = "0.11"
 uuid = "1.0.0-alpha.1"
 serde = { version = "1", features = ["derive"]}
-dashmap = "5"
+dashmap = "5.1"
 deadpool-redis = "0.10"
 
 mime = "0.3"

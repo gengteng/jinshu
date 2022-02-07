@@ -69,9 +69,12 @@ impl QueuedMessageHandler for Storage {
             Err(e) => return HandleResult::Failure(e.to_string().into()),
         };
 
+        let secs = message.timestamp as i64 / 1000;
+        let nsecs = (message.timestamp as i64 - (secs * 1000)) as u32 * 1000_1000;
+
         let model = jinshu_database::message::ActiveModel {
             id: Set(message.id.as_simple().to_string()),
-            timestamp: Set(DateTime::from_timestamp(message.timestamp as i64 / 1000, 0)),
+            timestamp: Set(DateTime::from_timestamp(secs, nsecs)),
             from: Set(message.from.as_simple().to_string()),
             to: Set(message.to.as_simple().to_string()),
             content: Set(content),
