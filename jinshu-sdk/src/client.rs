@@ -1,131 +1,107 @@
-use clap::Parser;
-use futures::stream::{SplitSink, SplitStream};
+use crate::LoginError;
+use dashmap::DashMap;
+use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt};
 use jinshu_protocol::{
     Body, Codec, Content, Message, Pdu, PduCodec, Request, Response, TransactionId,
     TransactionIdGenerator,
 };
 use jinshu_utils::current_millisecond;
-use log::LevelFilter;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Instant;
+use tokio::io::{AsyncRead, AsyncWrite};
 use tokio::net::TcpStream;
 use tokio::sync::Mutex;
-use tokio::time::sleep;
 use tokio_util::codec::Framed;
+use url::Url;
 use uuid::Uuid;
 
-/// 锦书命令行客户端
-#[derive(Debug, Parser)]
-struct Opts {
-    /// 服务端地址及端口
-    #[clap(short = 'a', long, default_value = "localhost:9000")]
-    addr: String,
-
-    /// 用户 ID
-    #[clap(short = 'u', long)]
-    user_id: Uuid,
-
-    /// 服务端签发的 token
-    #[clap(short = 't', long)]
-    token: Uuid,
-
-    /// 接收方 ID
-    #[clap(short = 'r', long)]
-    target: Uuid,
-
-    /// 使用的编码, 0.json | 1.msgpack | 2.cbor | 3.flexbuffers
-    #[clap(short = 'c', long, default_value = "cbor")]
-    codec: Codec,
-
-    /// 日志级别
-    #[clap(short = 'l', long, default_value = "INFO")]
-    log_level: LevelFilter,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClientConfig {
+    pub comet_host: String,
+    pub comet_port: u16,
+    pub api_url: Url,
 }
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    let Opts {
-        addr,
-        user_id,
-        token,
-        target,
-        codec,
-        log_level,
-    } = Opts::parse();
+impl ClientConfig {
+    pub fn comet_address(&self) -> String {
+        format!("{}:{}", self.comet_host, self.comet_port)
+    }
+}
 
-    env_logger::builder().filter_level(log_level).try_init()?;
-
-    let socket = TcpStream::connect(addr).await?;
-    let mut framed = Framed::new(socket, PduCodec::new(codec));
-    let mut id_gen = TransactionIdGenerator::default();
-
-    let sign_in = Request::SignIn { user_id, token }.to_pdu(id_gen.next_id());
-
-    framed.send(sign_in).await?;
-
-    match framed.next().await {
-        Some(Ok(Pdu {
-            body: Body::Resp(Response::SignedIn { extension }),
-            ..
-        })) => {
-            log::info!("Sign in ok");
-            if let Some(extension) = extension {
-                log::info!("extension: {}", extension);
-            }
-        }
-        Some(Ok(Pdu {
-            body: Body::Resp(Response::InvalidToken { user_id }),
-            ..
-        })) => {
-            anyhow::bail!("Sign in error: invalid token (user_id: {})", user_id);
-        }
-        Some(Ok(pdu)) => {
-            anyhow::bail!("Sign in error: unexpected response: {:?}", pdu);
-        }
-        Some(Err(e)) => {
-            anyhow::bail!("Sign in error: {}", e);
-        }
-        None => {
-            anyhow::bail!("Connection closed");
+impl Default for ClientConfig {
+    fn default() -> Self {
+        Self {
+            comet_host: "localhost".into(),
+            comet_port: 9000,
+            api_url: "http://localhost:9500"
+                .parse()
+                .expect("impossible: api_url parse error"),
         }
     }
+}
 
-    // loop {
-    //     let now = Instant::now();
-    //     framed.send(Request::Ping.to_pdu(id_gen.next_id())).await?;
-    //
-    //     if let Some(result) = framed.next().await {
-    //         let pdu = result?;
-    //         log::info!("pdu received: {:?} ({}ms)", pdu, now.elapsed().as_millis());
-    //     } else {
-    //         log::error!("The connection was closed before receiving Pong");
-    //     }
-    //
-    //     if id_gen.seq() >= 10 {
-    //         break;
-    //     }
-    // }
+#[derive(Debug, Clone)]
+pub struct Client {
+    config: ClientConfig,
+    http: reqwest::Client,
+}
 
-    let from = user_id;
-    let to = target;
+impl Client {
+    pub fn new(config: impl Into<ClientConfig>) -> crate::Result<Self> {
+        Ok(Self {
+            config: config.into(),
+            http: reqwest::ClientBuilder::new()
+                .user_agent(USER_AGENT)
+                .build()?,
+        })
+    }
 
-    let (writer, reader) = framed.split();
+    pub async fn sign_in(&self, user_id: Uuid, token: Uuid) -> Result<UserAgent, LoginError> {
+        let socket = TcpStream::connect(self.config.comet_address()).await?;
+        let mut framed = Framed::new(socket, PduCodec::default());
+        let mut trans_id_gen = TransactionIdGenerator::default();
 
-    let waiting = Arc::new(Mutex::new(HashMap::new()));
+        let sign_in = Request::SignIn { user_id, token }.to_pdu(trans_id_gen.next_id());
 
-    tokio::spawn(write_loop(from, to, waiting.clone(), writer));
+        framed.send(sign_in).await?;
 
-    read_loop(waiting, reader).await
+        // add timeout
+        match framed.next().await {
+            Some(Ok(Pdu {
+                body: Body::Resp(Response::SignedIn { extension }),
+                ..
+            })) => {
+                log::info!("Sign in ok");
+                if let Some(extension) = &extension {
+                    log::info!("extension: {}", extension);
+                }
+                // TODO: extension
+                let (writer, reader) = framed.split();
 
-    //Ok(())
+                let waiting = Arc::new(DashMap::new());
+
+                Ok(UserAgent {
+                    user_id,
+                    token,
+                    connection: UserConnection::new(trans_id_gen, framed),
+                })
+            }
+            Some(Ok(Pdu {
+                body: Body::Resp(Response::InvalidToken { user_id }),
+                ..
+            })) => Err(crate::LoginError::InvalidToken.into()),
+            Some(Ok(pdu)) => Err(crate::LoginError::UnexpectedResponse(pdu).into()),
+            Some(Err(e)) => Err(crate::LoginError::DecodeError(e)),
+            None => Err(crate::LoginError::ConnectionClosed.into()),
+        }
+    }
 }
 
 async fn write_loop(
-    from: Uuid,
-    to: Uuid,
-    waiting: Arc<Mutex<HashMap<TransactionId, Instant>>>,
+    waiting: Arc<DashMap<TransactionId, Instant>>,
     mut writer: SplitSink<Framed<TcpStream, PduCodec>, Pdu>,
 ) -> anyhow::Result<()> {
     let mut id_gen = TransactionIdGenerator::new();
@@ -198,4 +174,46 @@ async fn read_loop(
     }
 
     Ok(())
+}
+
+pub const USER_AGENT: &'static str =
+    concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
+
+#[derive(Debug)]
+pub struct UserAgent<T = TcpStream> {
+    user_id: Uuid,
+    token: Uuid,
+    connection: UserConnection<T>,
+}
+
+impl UserAgent {
+    pub async fn send(&self, _message: Message) -> crate::Result<()> {
+        Ok(())
+    }
+
+    pub async fn receive(&self) -> crate::Result<Message> {
+        Err(crate::Error::Other("todo".into()))
+    }
+
+    pub async fn sign_out(self) -> crate::Result<()> {
+        Err(crate::Error::Other("todo".into()))
+    }
+}
+
+#[derive(Debug)]
+pub struct UserConnection<T> {
+    trans_id_gen: TransactionIdGenerator,
+    framed: Framed<T, PduCodec>,
+}
+
+impl<T> UserConnection<T> {
+    pub(crate) fn new(trans_id_gen: TransactionIdGenerator, framed: Framed<T, PduCodec>) -> Self
+    where
+        T: AsyncWrite + AsyncRead,
+    {
+        Self {
+            trans_id_gen,
+            framed,
+        }
+    }
 }
