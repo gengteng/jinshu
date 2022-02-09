@@ -181,8 +181,7 @@ async fn read_loop(
     Ok(())
 }
 
-pub const USER_AGENT: &'static str =
-    concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
+pub const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
 
 #[derive(Debug)]
 pub struct UserAgent {

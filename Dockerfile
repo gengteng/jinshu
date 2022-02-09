@@ -31,6 +31,6 @@ COPY --from=builder /jinshu/target/release/jinshu-gateway .
 COPY --from=builder /jinshu/target/release/jinshu-api .
 COPY --from=builder /jinshu/target/release/jinshu-file .
 COPY --from=builder /jinshu/target/release/jinshu-admin .
-COPY --from=builder /jinshu/target/release/jinshu-cli .
 COPY --from=builder /jinshu/target/release/examples/app-server .
+COPY --from=builder /jinshu/target/release/examples/app-client .
 COPY --from=builder /jinshu/conf conf

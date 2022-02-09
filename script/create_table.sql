@@ -102,12 +102,5 @@ alter table app_user
 create unique index app_user_jinshu_id_uindex
     on app_user (jinshu_id);
 
-create unique index app_user_mobile_uindex
+create unique index app_user_username_uindex
     on app_user (username);
-
-
-
-
-
-
-
