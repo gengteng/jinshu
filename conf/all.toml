@@ -107,9 +107,26 @@ auto_commit = false
 ## Consumer config
 #subscription_type = "keyshared"
 
+# Api config
+#[api]
+#ip = "0.0.0.0"
+#port = 9500
+
+# Sdk client config
+[client]
+comet_host = "localhost"
+comet_port = 9000
+api_url = "http://localhost:9500"
+
 # App server demo config
 [app]
 ip = "0.0.0.0"
 port = 8765
 gateway_host = "127.0.0.1"
 gateway_port = 9200
+
+# App client demo config
+[app_client]
+user_count = 3
+server_host = "localhost"
+server_port = 8765

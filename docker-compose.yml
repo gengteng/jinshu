@@ -167,3 +167,20 @@ services:
       - postgres
       - gateway
     stop_signal: SIGTERM
+
+  app-client:
+    build: ./jinshu-sdk/examples
+    container_name: app-client
+    environment:
+      JINSHU_APP_CLIENT__SERVER_HOST: "app-server"
+      JINSHU_CLIENT__COMET_HOST: "comet"
+      JINSHU_CLIENT__API_URL: "http://api:9500"
+    links:
+      - app-server
+      - comet
+      #- api
+    depends_on:
+      - app-server
+      - comet
+      #- api
+    stop_signal: SIGTERM

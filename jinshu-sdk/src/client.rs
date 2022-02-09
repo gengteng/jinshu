@@ -1,19 +1,15 @@
 use crate::LoginError;
 use dashmap::DashMap;
-use futures::stream::SplitSink;
+use futures::stream::{SplitSink, SplitStream};
 use futures::{SinkExt, StreamExt};
 use jinshu_protocol::{
-    Body, Codec, Content, Message, Pdu, PduCodec, Request, Response, TransactionId,
-    TransactionIdGenerator,
+    Body, Message, Pdu, PduCodec, Request, Response, TransactionId, TransactionIdGenerator,
 };
-use jinshu_utils::current_millisecond;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
-use tokio::io::{AsyncRead, AsyncWrite};
 use tokio::net::TcpStream;
-use tokio::sync::Mutex;
+use tokio::sync::mpsc::{Receiver, Sender};
 use tokio_util::codec::Framed;
 use url::Url;
 use uuid::Uuid;
@@ -59,6 +55,10 @@ impl Client {
         })
     }
 
+    pub fn http_client(&self) -> &reqwest::Client {
+        &self.http
+    }
+
     pub async fn sign_in(&self, user_id: Uuid, token: Uuid) -> Result<UserAgent, LoginError> {
         let socket = TcpStream::connect(self.config.comet_address()).await?;
         let mut framed = Framed::new(socket, PduCodec::default());
@@ -82,64 +82,66 @@ impl Client {
                 let (writer, reader) = framed.split();
 
                 let waiting = Arc::new(DashMap::new());
+                let (read_sender, receiver) = tokio::sync::mpsc::channel(32);
+                let w = waiting.clone();
+                tokio::spawn(async move {
+                    if let Err(e) = read_loop(read_sender, w, reader).await {
+                        log::error!("Read loop exited with error: {}", e);
+                    }
+                });
+
+                let (sender, write_receiver) = tokio::sync::mpsc::channel(32);
+                tokio::spawn(async move {
+                    if let Err(e) = write_loop(write_receiver, waiting, writer).await {
+                        log::error!("Write loop exited with error: {}", e);
+                    }
+                });
 
                 Ok(UserAgent {
                     user_id,
-                    token,
-                    connection: UserConnection::new(trans_id_gen, framed),
+                    connection: Connection::new(receiver, sender),
                 })
             }
             Some(Ok(Pdu {
-                body: Body::Resp(Response::InvalidToken { user_id }),
+                body: Body::Resp(Response::InvalidToken { .. }),
                 ..
-            })) => Err(crate::LoginError::InvalidToken.into()),
-            Some(Ok(pdu)) => Err(crate::LoginError::UnexpectedResponse(pdu).into()),
+            })) => Err(crate::LoginError::InvalidToken),
+            Some(Ok(pdu)) => Err(crate::LoginError::UnexpectedResponse(pdu)),
             Some(Err(e)) => Err(crate::LoginError::DecodeError(e)),
-            None => Err(crate::LoginError::ConnectionClosed.into()),
+            None => Err(crate::LoginError::ConnectionClosed),
         }
     }
 }
 
 async fn write_loop(
+    mut receiver: Receiver<Message>,
     waiting: Arc<DashMap<TransactionId, Instant>>,
     mut writer: SplitSink<Framed<TcpStream, PduCodec>, Pdu>,
 ) -> anyhow::Result<()> {
     let mut id_gen = TransactionIdGenerator::new();
 
-    loop {
+    while let Some(message) = receiver.recv().await {
         let trans_id = id_gen.next_id();
+        let pdu = Request::Send { message }.to_pdu(trans_id);
 
-        let pdu = Request::Send {
-            message: Message {
-                id: Uuid::new_v4(),
-                timestamp: current_millisecond(),
-                from,
-                to,
-                content: Content::Data {
-                    mime: mime::TEXT_PLAIN_UTF_8,
-                    bytes: Vec::from("你好"),
-                },
-            },
-        }
-        .to_pdu(trans_id);
-
-        waiting.lock().await.insert(trans_id, Instant::now());
+        waiting.insert(trans_id, Instant::now());
 
         writer.send(pdu).await?;
-
-        sleep(Duration::from_secs(1)).await;
     }
+
+    Ok(())
 }
 
 async fn read_loop(
-    waiting: Arc<Mutex<HashMap<TransactionId, Instant>>>,
+    sender: Sender<Message>,
+    waiting: Arc<DashMap<TransactionId, Instant>>,
     mut reader: SplitStream<Framed<TcpStream, PduCodec>>,
 ) -> anyhow::Result<()> {
     while let Some(qr) = reader.next().await {
         let pdu = qr?;
         match pdu.body {
-            Body::Resp(response) => match waiting.lock().await.remove(&pdu.id) {
-                Some(instant) => match response {
+            Body::Resp(response) => match waiting.remove(&pdu.id) {
+                Some((_, instant)) => match response {
                     Response::Queued { id } => {
                         log::info!(
                             "Message {:?} is queued. ({}ms)",
@@ -167,7 +169,10 @@ async fn read_loop(
                 }
             },
             Body::Req(request) => match request {
-                Request::Push { message } => log::info!("Received a message: {:?}", message),
+                Request::Push { message } => {
+                    log::info!("Received a message: {:?}", message);
+                    sender.send(message).await?;
+                }
                 req => log::error!("Invalid request: {:?}", req),
             },
         }
@@ -180,40 +185,61 @@ pub const USER_AGENT: &'static str =
     concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
 
 #[derive(Debug)]
-pub struct UserAgent<T = TcpStream> {
+pub struct UserAgent {
     user_id: Uuid,
-    token: Uuid,
-    connection: UserConnection<T>,
+    connection: Connection<Message>,
 }
 
 impl UserAgent {
-    pub async fn send(&self, _message: Message) -> crate::Result<()> {
-        Ok(())
+    pub async fn send(&self, message: Message) -> crate::Result<()> {
+        self.connection.send(message).await
     }
 
-    pub async fn receive(&self) -> crate::Result<Message> {
-        Err(crate::Error::Other("todo".into()))
+    pub async fn receive(&mut self) -> crate::Result<Message> {
+        self.connection.receive().await
     }
 
-    pub async fn sign_out(self) -> crate::Result<()> {
-        Err(crate::Error::Other("todo".into()))
+    pub async fn user_id(&self) -> &Uuid {
+        &self.user_id
     }
 }
 
 #[derive(Debug)]
-pub struct UserConnection<T> {
-    trans_id_gen: TransactionIdGenerator,
-    framed: Framed<T, PduCodec>,
+pub struct Connection<T> {
+    receiver: Receiver<T>,
+    sender: Sender<T>,
 }
 
-impl<T> UserConnection<T> {
-    pub(crate) fn new(trans_id_gen: TransactionIdGenerator, framed: Framed<T, PduCodec>) -> Self
-    where
-        T: AsyncWrite + AsyncRead,
-    {
-        Self {
-            trans_id_gen,
-            framed,
+impl<T> Connection<T> {
+    pub(crate) fn new(receiver: Receiver<T>, sender: Sender<T>) -> Self {
+        Self { receiver, sender }
+    }
+
+    pub async fn send(&self, message: T) -> crate::Result<()> {
+        if self.sender.send(message).await.is_err() {
+            return Err(crate::Error::ConnectionClosed);
         }
+        Ok(())
+    }
+
+    pub async fn receive(&mut self) -> crate::Result<T> {
+        match self.receiver.recv().await {
+            Some(message) => Ok(message),
+            None => Err(crate::Error::ConnectionClosed),
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::Connection;
+
+    #[tokio::test]
+    async fn connection() {
+        let (sender, receiver) = tokio::sync::mpsc::channel::<()>(1);
+        let mut connection = Connection::new(receiver, sender.clone());
+
+        assert!(connection.send(()).await.is_ok());
+        assert!(connection.receive().await.is_ok());
     }
 }

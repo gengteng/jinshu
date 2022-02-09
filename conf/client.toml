@@ -1,0 +1,4 @@
+[client]
+comet_host = "localhost"
+comet_port = 9000
+api_url = "http://localhost:9500"

@@ -1,7 +1,7 @@
 use crate::{Error, InvalidContentFormat, NoSuchCodecError};
 use bytes::{Buf, BufMut, BytesMut};
-use jinshu_utils::current_second;
-use mime::Mime;
+use jinshu_utils::{current_millisecond, current_second};
+use mime::{Mime, TEXT_PLAIN_UTF_8};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::mem::size_of;
@@ -133,6 +133,18 @@ pub struct Message {
     pub content: Content,
 }
 
+impl Message {
+    pub fn new(from: Uuid, to: Uuid, content: Content) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            timestamp: current_millisecond(),
+            from,
+            to,
+            content,
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum Content {
@@ -144,6 +156,23 @@ pub enum Content {
     Link {
         url: Url,
     },
+}
+
+impl Content {
+    pub fn string(s: impl Into<String>) -> Self {
+        Self::data(TEXT_PLAIN_UTF_8, s.into().into_bytes())
+    }
+
+    pub fn data(mime: Mime, bytes: impl Into<Vec<u8>>) -> Self {
+        Self::Data {
+            mime,
+            bytes: bytes.into(),
+        }
+    }
+
+    pub fn link(url: impl Into<Url>) -> Self {
+        Self::Link { url: url.into() }
+    }
 }
 
 impl TryFrom<&Content> for Vec<u8> {
@@ -364,6 +393,7 @@ mod test {
     use crate::{Body, TransactionIdGenerator};
     use bytes::{BufMut, BytesMut};
     use tokio_util::codec::{Decoder, Encoder};
+    use url::Url;
     use uuid::Uuid;
 
     #[test]
@@ -470,16 +500,7 @@ mod test {
         assert!(codec
             .encode(
                 Request::Send {
-                    message: Message {
-                        id: Uuid::new_v4(),
-                        timestamp: 0,
-                        from: Uuid::new_v4(),
-                        to: Uuid::new_v4(),
-                        content: Content::Data {
-                            mime: mime::TEXT_PLAIN_UTF_8,
-                            bytes: "hello".as_bytes().to_vec()
-                        }
-                    }
+                    message: Message::new(Uuid::new_v4(), Uuid::new_v4(), Content::string("hello"))
                 }
                 .to_pdu(id_gen.next_id()),
                 &mut bytes
@@ -544,17 +565,18 @@ mod test {
 
     #[test]
     fn content() {
-        let text: &[u8] = "hello, jinshu".as_bytes();
+        let text = "hello, jinshu";
 
-        let content = Content::Data {
-            mime: mime::TEXT_PLAIN_UTF_8,
-            bytes: text.to_vec(),
-        };
+        let string = Content::string("hello, jinshu");
 
-        let result = Vec::try_from(&content);
+        let result = Vec::try_from(&string);
         assert!(result.is_ok());
 
         assert!(matches!(Content::try_from(result.unwrap().as_slice()),
-                Ok(Content::Data { mime, bytes }) if mime == mime::TEXT_PLAIN_UTF_8 && bytes == text));
+                Ok(Content::Data { mime, bytes }) if mime == mime::TEXT_PLAIN_UTF_8 && bytes == text.as_bytes()));
+
+        let link =
+            Content::link(Url::parse("http://localhost:10000").expect("Failed to parse url"));
+        assert!(matches!(link, Content::Link { .. }))
     }
 }

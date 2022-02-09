@@ -9,6 +9,8 @@ pub enum Error {
     Reqwest(#[from] reqwest::Error),
     #[error(transparent)]
     Login(#[from] LoginError),
+    #[error("Connection closed")]
+    ConnectionClosed,
     #[error("Other error: {}", .0)]
     Other(Cow<'static, str>),
 }

@@ -29,8 +29,10 @@ thiserror = "1.0"
 dashmap = "5.1"
 
 [dev-dependencies]
+tracing = "0.1"
 jinshu-common = { path = "../jinshu-common" }
+jinshu-tracing = { path = "../jinshu-tracing" }
 
-[[bin]]
-path = "src/cli.rs"
-name = "jinshu-cli"
+[[example]]
+name = "app-client"
+path = "examples/app_client.rs"
