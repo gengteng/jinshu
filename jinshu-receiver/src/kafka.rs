@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use jinshu_queue::kafka::KafkaProducerConfig;
 use jinshu_queue::QueuedMessage;
 use jinshu_rpc::domain;
@@ -7,12 +5,14 @@ use jinshu_rpc::receiver::{self, receiver_server};
 use rdkafka::producer::{FutureProducer, FutureRecord};
 use std::time::Duration;
 
+/// Kafka 接收器
 #[derive(Clone)]
 pub struct KafkaReceiver(FutureProducer, String);
 
 // .\kafka-topics.sh --zookeeper localhost:2181 --create --topic jinshu.test --partitions 32 --replication-factor 1
 
 impl KafkaReceiver {
+    /// 使用 Kafka 的消费者配置构造
     pub fn create(config: KafkaProducerConfig) -> anyhow::Result<Self> {
         let cli = rdkafka::ClientConfig::new()
             .set("bootstrap.servers", config.servers)

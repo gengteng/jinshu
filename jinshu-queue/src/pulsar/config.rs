@@ -1,8 +1,11 @@
 use serde::{Deserialize, Serialize};
 
+/// Pulsar 生产者配置
 pub type PulsarProducerConfig = PulsarConfig<ProducerConfig>;
+/// Pulsar 消费者配置
 pub type PulsarConsumerConfig = PulsarConfig<ConsumerConfig>;
 
+/// Pulsar 配置
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PulsarConfig<T> {
     /// 服务器地址
@@ -27,7 +30,7 @@ impl<T: Default> Default for PulsarConfig<T> {
     }
 }
 
-/// 使用 Pulsar 作为消息队列
+/// Pulsar 生产配置
 #[derive(Debug, Serialize, Deserialize)]
 // #[serde(default)]
 pub struct ProducerConfig;
@@ -38,15 +41,19 @@ impl Default for ProducerConfig {
     }
 }
 
-/// 使用 Pulsar 作为消息队列
+/// Pulsar 消费配置
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ConsumerConfig {
+    /// 消费者名
     pub consumer_name: Option<String>,
 
+    /// 消费者 ID
     pub consumer_id: Option<u64>,
 
+    /// 订阅名
     pub subscription_name: Option<String>,
 
+    /// 订阅类型
     pub subscription_type: String,
 }
 

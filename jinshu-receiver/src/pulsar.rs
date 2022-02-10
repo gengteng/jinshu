@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use jinshu_queue::pulsar::PulsarProducerConfig;
 use jinshu_queue::QueuedMessage;
 use jinshu_rpc::domain::message::Message;
@@ -9,9 +7,11 @@ use pulsar::producer::Message as PulsarMessage;
 use pulsar::{Pulsar, TokioExecutor};
 use tonic::{Request, Response, Status};
 
+/// Pulsar 接收器
 pub struct PulsarReceiver(Pulsar<TokioExecutor>, PulsarProducerConfig);
 
 impl PulsarReceiver {
+    /// 使用 Pulsar 消费者配置构造
     pub async fn create(config: PulsarProducerConfig) -> anyhow::Result<Self> {
         let pulsar = Pulsar::builder(config.url.to_string(), TokioExecutor)
             .build()

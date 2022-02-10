@@ -5,6 +5,7 @@ use pulsar::{Consumer, ConsumerOptions, Pulsar, SubType, TokioExecutor};
 use std::future::Future;
 use tokio_stream::StreamExt;
 
+/// Pulsar 消费者
 pub struct PulsarConsumer {
     topic: String,
     //pulsar: Pulsar<TokioExecutor>,
@@ -12,6 +13,7 @@ pub struct PulsarConsumer {
 }
 
 impl PulsarConsumer {
+    /// 使用配置构造
     pub async fn new(config: &PulsarConsumerConfig) -> crate::pulsar::Result<Self> {
         let sub_type = match config.extension.subscription_type.as_str() {
             "exclusive" | "0" => SubType::Exclusive,
@@ -61,6 +63,7 @@ impl PulsarConsumer {
         })
     }
 
+    /// 开始消费并处理，等待关闭信号
     pub async fn start_with_shutdown<F, H>(
         &mut self,
         handler: H,

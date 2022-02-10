@@ -11,6 +11,7 @@ use tonic::transport::{Channel, Endpoint, Uri};
 use tonic::Request;
 use uuid::Uuid;
 
+/// 消息推送器
 pub struct Pusher {
     clients: DashMap<String, CometClient<Channel>>,
     session_store: SessionStore,
@@ -18,6 +19,7 @@ pub struct Pusher {
 }
 
 impl Pusher {
+    /// 构造消息推送器
     pub async fn new(
         comet_name: &str,
         registry: &EtcdRegistry,
@@ -87,7 +89,7 @@ impl Pusher {
         })
     }
 
-    #[allow(dead_code)]
+    /// 发送消息
     pub async fn send(&self, message: RpcMessage) -> anyhow::Result<()> {
         let user_id: Uuid = Uuid::from_slice(message.to.as_slice())?;
         match self.session_store.load(user_id).await? {

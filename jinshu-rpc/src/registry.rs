@@ -1,4 +1,6 @@
+/// Etcd 注册中心
 pub mod etcd;
+/// Mock 注册中心
 #[cfg(test)]
 pub mod mock;
 
@@ -21,11 +23,13 @@ use tower::Service;
 ///
 #[async_trait]
 pub trait Registry {
+    /// 注册中心错误类型
     type Error: Debug
         + Display
         + Send
         + 'static
         + From<<<Self as Registry>::Watcher as Watcher>::Error>;
+    /// 注册中心监听器类型
     type Watcher: Watcher + Unpin + Send + 'static;
 
     /// 注册服务
@@ -145,6 +149,7 @@ pub trait Registry {
         Ok((service_uri, handle))
     }
 
+    /// 使用已有的 TCP 监听器运行服务
     async fn run_service_with_listener<S, F>(
         &self,
         service_name: &str,
@@ -203,17 +208,31 @@ pub trait Registry {
     }
 }
 
+/// 监听器
 #[async_trait]
 pub trait Watcher: Stream<Item = Change<String, Uri>> {
+    /// 监听器错误类型
     type Error: Debug + Display + Send + Sync + 'static;
 
+    /// 取消监听
     async fn cancel(&mut self) -> Result<(), Self::Error>;
 }
 
+/// 负载变化
 #[derive(Debug, Clone)]
 pub enum Change<K, V> {
-    Create(K, V),
-    Delete(K),
+    /// 创建
+    Create(
+        /// 键
+        K,
+        /// 值
+        V,
+    ),
+    /// 删除
+    Delete(
+        /// 键
+        K,
+    ),
 }
 
 impl<K> From<Change<K, Uri>> for tower::discover::Change<K, Endpoint> {

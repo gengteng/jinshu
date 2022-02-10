@@ -5,12 +5,17 @@ use std::path::PathBuf;
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::prelude::*;
 
+/// 跟踪配置
 #[derive(Debug, Deserialize, Serialize)]
 pub struct TracingConfig {
+    /// 跟踪级别
     #[serde(with = "serde_level")]
     pub level: tracing::Level,
+    /// 文件保存地址
     pub path: PathBuf,
+    /// 文件大小
     pub trigger_size: Byte,
+    /// 文件个数
     pub archived_count: usize,
 }
 
@@ -59,12 +64,14 @@ mod serde_level {
     }
 }
 
+/// 跟踪句柄
 #[must_use]
 pub struct TracingHandle {
     _guard: WorkerGuard,
 }
 
 impl TracingConfig {
+    /// 初始化，确保全局执行一次
     pub fn init(&self, service: &str) -> crate::Result<TracingHandle> {
         let registry = tracing_subscriber::Registry::default();
 

@@ -3,18 +3,30 @@ use sea_orm::ConnectOptions;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
+/// 数据库配置
 #[derive(Debug, Deserialize, Serialize)]
 pub struct DatabaseConfig {
+    /// 协议，例如 postgres、mysql
     pub schema: String,
+    /// 主机名
     pub host: String,
+    /// 端口
     pub port: u16,
+    /// 用户名
     pub username: String,
+    ///密码
     pub password: Secret,
+    /// 路径/数据库名
     pub path: String,
+    /// 连接池最大连接数
     pub max_connections: u32,
+    /// 连接池最小连接数
     pub min_connections: u32,
+    /// 连接超时时间
     pub connect_timeout_ms: u64,
+    /// 空闲超时时间
     pub idle_timeout_ms: u64,
+    /// sqlx 日志开关
     pub sqlx_log: bool,
 }
 
@@ -37,6 +49,7 @@ impl Default for DatabaseConfig {
 }
 
 impl DatabaseConfig {
+    /// 获取连接 URL
     pub fn connection_url(&self) -> Secret {
         Secret::new(format!(
             "{}://{}:{}@{}:{}/{}",

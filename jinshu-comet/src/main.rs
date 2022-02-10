@@ -1,9 +1,6 @@
-mod comet;
-mod connection;
-
-use crate::comet::Comet;
-use crate::connection::ConnectionManager;
+use jinshu_comet::comet::Comet;
 use jinshu_comet::config::CometConfig;
+use jinshu_comet::connection::ConnectionManager;
 use jinshu_common::Config;
 use jinshu_redis::config::RedisConfig;
 use jinshu_redis::session::SessionStore;

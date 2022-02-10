@@ -1,9 +1,6 @@
-mod config;
-mod pusher;
-
-use crate::config::PusherConfig;
-use crate::pusher::Pusher;
 use jinshu_common::Config;
+use jinshu_pusher::Pusher;
+use jinshu_pusher::PusherConfig;
 use jinshu_queue::config::{consume_with_handler, QueueConfig};
 use jinshu_queue::kafka::KafkaConsumerConfig;
 use jinshu_queue::pulsar::PulsarConsumerConfig;

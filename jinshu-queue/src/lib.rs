@@ -1,12 +1,22 @@
+#![deny(missing_docs, unsafe_code)]
+//! # Queue
+//!
+//! 消息队列消费相关
+//!
+
 use jinshu_rpc::domain::message::Message as RpcMessage;
 use std::borrow::Cow;
 use std::fmt::Debug;
 use std::mem::size_of;
 use uuid::Uuid;
 
+/// 配置
 pub mod config;
+/// 错误
 pub mod error;
+/// Kafka
 pub mod kafka;
+/// Pulsar
 pub mod pulsar;
 
 /// 对消费到的消息进行处理得到的结果
@@ -23,18 +33,22 @@ pub enum HandleResult {
     Error(Cow<'static, str>),
 }
 
+/// 队列中使用的消息，使用 RPC 消息封装
 #[derive(Debug, Clone)]
 pub struct QueuedMessage(RpcMessage);
 
 impl QueuedMessage {
+    /// 使用 RPC 消息构造
     pub fn new(message: RpcMessage) -> Self {
         Self(message)
     }
 
+    /// 拆包为 RPC 消息
     pub fn unbox(self) -> RpcMessage {
         self.0
     }
 
+    /// 获取内部 RPC 消息的不可变引用
     pub fn inner(&self) -> &RpcMessage {
         &self.0
     }
@@ -104,8 +118,10 @@ impl From<&QueuedMessage> for Vec<u8> {
     }
 }
 
+/// 队列消息处理器，在消费队列时使用
 #[async_trait::async_trait]
 pub trait QueuedMessageHandler {
+    /// 处理方法
     async fn handle(&self, topic: &str, message: &QueuedMessage) -> HandleResult;
 }
 

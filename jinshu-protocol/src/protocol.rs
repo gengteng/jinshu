@@ -10,12 +10,14 @@ use tokio_util::codec::{Decoder, Encoder};
 use url::Url;
 use uuid::Uuid;
 
+/// 事务 ID
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct TransactionId {
     time: u32,
     seq: u32,
 }
 
+/// 事务 ID 生成器
 #[derive(Debug)]
 pub struct TransactionIdGenerator {
     start_time: u64,
@@ -32,16 +34,19 @@ impl Default for TransactionIdGenerator {
 }
 
 impl TransactionIdGenerator {
+    /// 构造一个事务生成器
     pub fn new() -> Self {
         TransactionIdGenerator::default()
     }
 
+    /// 获取当前的序列值
     pub fn seq(&self) -> u32 {
         self.seq
     }
 }
 
 impl TransactionIdGenerator {
+    /// 获取下一个事务 ID
     pub fn next_id(&mut self) -> TransactionId {
         let time = (current_second() - self.start_time) as u32;
         let seq = self.seq;
@@ -52,88 +57,137 @@ impl TransactionIdGenerator {
     }
 }
 
+/// 协议数据单元
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Pdu {
+    /// 事务 ID
     pub id: TransactionId,
+    /// 数据
     pub body: Body,
 }
 
 impl Pdu {
+    /// 构造协议数据单元
     pub fn new(id: TransactionId, body: Body) -> Self {
         Self { id, body }
     }
 
+    /// 是否为请求
     pub fn is_request(&self) -> bool {
         matches!(self.body, Body::Req(_))
     }
 
+    /// 是否为响应
     pub fn is_response(&self) -> bool {
         matches!(self.body, Body::Resp(_))
     }
 }
 
+/// 协议数据单元数据
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum Body {
+    /// 请求
     Req(Request),
+    /// 响应
     Resp(Response),
 }
 
+/// 请求
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "method")]
 pub enum Request {
-    SignIn { user_id: Uuid, token: Uuid },
+    /// 登录
+    SignIn {
+        /// 锦书用户 ID
+        user_id: Uuid,
+        /// 登录令牌
+        token: Uuid,
+    },
+    /// 登出
     SignOut,
+    /// Ping
     Ping,
-    Send { message: Message },
-    Push { message: Message },
+    /// 发送消息
+    Send {
+        /// 消息
+        message: Message,
+    },
+    /// 推送消息
+    Push {
+        /// 消息
+        message: Message,
+    },
 }
 
 impl Request {
+    /// 使用事务 ID 构造协议数据单元
     pub fn to_pdu(self, id: TransactionId) -> Pdu {
         Pdu::new(id, Body::Req(self))
     }
 }
 
+/// 响应
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "status")]
 pub enum Response {
+    /// 成功
     Ok,
+    /// 登录成功
     SignedIn {
+        /// 扩展字段
         extension: Option<serde_json::Value>,
     },
+    /// 非法的令牌
     InvalidToken {
+        /// 锦书用户 ID
         user_id: Uuid,
     },
+    /// Pong
     Pong,
+    /// 消息已入队
     Queued {
+        /// 消息 ID
         id: Uuid,
     },
+    /// 消息被拒绝
     Rejected {
+        /// 消息 ID
         id: Uuid,
+        /// 错误信息
         error: String,
     },
+    /// 发生错误
     Error {
+        /// 错误信息
         cause: String,
     },
 }
 
 impl Response {
+    /// 使用事务 ID 构造协议数据单元
     pub fn to_pdu(self, id: TransactionId) -> Pdu {
         Pdu::new(id, Body::Resp(self))
     }
 }
 
+/// 消息
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Message {
+    /// 消息 ID
     pub id: Uuid,
+    /// 消息时间戳
     pub timestamp: u64,
+    /// 发送者 ID
     pub from: Uuid,
+    /// 接收者 ID
     pub to: Uuid,
+    /// 消息内容
     pub content: Content,
 }
 
 impl Message {
+    /// 构造消息
     pub fn new(from: Uuid, to: Uuid, content: Content) -> Self {
         Self {
             id: Uuid::new_v4(),
@@ -145,24 +199,32 @@ impl Message {
     }
 }
 
+/// 消息内容
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum Content {
+    /// 数据消息，包括字符串、小图片等
     Data {
+        /// 数据类型
         #[serde(with = "serde_shims::mime")]
         mime: Mime,
+        /// 二进制数据
         bytes: Vec<u8>,
     },
+    /// 链接消息，包括大图片、视频等
     Link {
+        /// 链接地址
         url: Url,
     },
 }
 
 impl Content {
+    /// 使用字符串构造一个消息内容
     pub fn string(s: impl Into<String>) -> Self {
         Self::data(TEXT_PLAIN_UTF_8, s.into().into_bytes())
     }
 
+    /// 构造一个数据消息内容
     pub fn data(mime: Mime, bytes: impl Into<Vec<u8>>) -> Self {
         Self::Data {
             mime,
@@ -170,6 +232,7 @@ impl Content {
         }
     }
 
+    /// 构造一个链接消息内容
     pub fn link(url: impl Into<Url>) -> Self {
         Self::Link { url: url.into() }
     }
@@ -193,6 +256,7 @@ impl TryFrom<&[u8]> for Content {
     }
 }
 
+/// 协议数据单元编解码器
 #[derive(Debug, Copy, Clone, Default)]
 pub struct PduCodec {
     codec: Codec,
@@ -200,6 +264,7 @@ pub struct PduCodec {
 }
 
 impl PduCodec {
+    /// 构造编解码器
     pub fn new(codec: Codec) -> Self {
         Self {
             codec,
@@ -207,19 +272,25 @@ impl PduCodec {
         }
     }
 
+    /// 获取编解码格式
     pub fn codec(&self) -> Codec {
         self.codec
     }
 }
 
+/// 编解码格式
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, Eq, PartialEq)]
 pub enum Codec {
+    /// JSON
     #[serde(rename = "json")]
     Json = 0,
+    /// MsgPack
     #[serde(rename = "msgpack")]
     MsgPack = 1,
+    /// CBOR
     #[serde(rename = "cbor")]
     Cbor = 2,
+    /// FlexBuffers
     #[serde(rename = "flexbuffers")]
     FlexBuffers = 3,
 }
@@ -531,7 +602,7 @@ mod test {
         head.put_u32(0xffffffff);
         assert!(matches!(
             codec.decode(&mut head),
-            Err(crate::Error::Codec(NoSuchCodecError))
+            Err(crate::Error::InvalidCodec(NoSuchCodecError))
         ));
     }
 

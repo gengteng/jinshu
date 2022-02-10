@@ -1,9 +1,11 @@
 use jinshu_rpc::config::ServiceConfig;
 use serde::{Deserialize, Serialize};
 
+/// Receiver 的配置
 #[derive(Debug, Deserialize, Serialize)]
 // #[serde(default)]
 pub struct ReceiverConfig {
+    /// 接收服务配置
     #[serde(flatten)]
     pub service: ServiceConfig,
 }

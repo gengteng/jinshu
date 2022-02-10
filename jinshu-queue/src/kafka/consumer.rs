@@ -6,12 +6,14 @@ use rdkafka::ClientConfig;
 use std::future::Future;
 use tokio_stream::StreamExt;
 
+/// Kafka 消费者
 pub struct KafkaConsumer {
     topic: String,
     consumer: StreamConsumer,
 }
 
 impl KafkaConsumer {
+    /// 使用配置构造
     pub async fn new(config: &KafkaConsumerConfig) -> crate::kafka::Result<Self> {
         let consumer: StreamConsumer = ClientConfig::new()
             .set("group.id", &config.extension.group_id)
@@ -44,6 +46,7 @@ impl KafkaConsumer {
         })
     }
 
+    /// 开始消费并处理，等待关闭信号
     pub async fn start_with_shutdown<F, H>(
         &mut self,
         handler: H,

@@ -1,8 +1,11 @@
 use serde::{Deserialize, Serialize};
 
+/// Kafka 生产者配置
 pub type KafkaProducerConfig = KafkaConfig<ProducerConfig>;
+/// Kafka 消费者配置
 pub type KafkaConsumerConfig = KafkaConfig<ConsumerConfig>;
 
+/// Kafka 配置
 #[derive(Debug, Deserialize, Serialize)]
 pub struct KafkaConfig<T> {
     /// 服务器地址
@@ -26,7 +29,7 @@ impl<T: Default> Default for KafkaConfig<T> {
     }
 }
 
-/// 使用 Kafka 作为消息队列
+/// Kafka 生产配置
 #[derive(Debug, Serialize, Deserialize)]
 // #[serde(default)]
 pub struct ProducerConfig {
@@ -42,17 +45,22 @@ impl Default for ProducerConfig {
     }
 }
 
-/// 使用 Kafka 作为消息队列
+/// Kafka 消费配置
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ConsumerConfig {
+    /// 消费组 ID
     pub group_id: String,
 
+    /// 分区 EOF
     pub partition_eof: bool,
 
+    /// 偏移量自动设置
     pub auto_offset_reset: String,
 
+    /// 会话超时时间（毫秒）
     pub session_timeout_ms: u64,
 
+    /// 是否自动提交
     pub auto_commit: bool,
 }
 

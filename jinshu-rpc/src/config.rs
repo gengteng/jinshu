@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::net::{IpAddr, SocketAddr};
 use tokio::net::TcpListener;
 
+/// 服务配置
 #[derive(Debug, Deserialize, Serialize)]
 // #[serde(default)]
 pub struct ServiceConfig {
@@ -23,6 +24,7 @@ pub struct ServiceConfig {
 }
 
 impl ServiceConfig {
+    /// 尝试绑定端口
     pub async fn try_bind(&self) -> anyhow::Result<(TcpListener, Uri)> {
         let address = SocketAddr::new(self.listen_ip, self.listen_port);
 

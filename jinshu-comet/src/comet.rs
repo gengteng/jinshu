@@ -1,16 +1,18 @@
-use crate::ConnectionManager;
+use crate::connection::ConnectionManager;
 use async_trait::async_trait;
 use jinshu_protocol::Message;
 use jinshu_rpc::comet::PushResult;
 use jinshu_rpc::{internal, invalid_argument};
 use tonic::{Request, Response, Status};
 
+/// 长链接保持服务
 #[derive(Clone)]
 pub struct Comet {
     manager: ConnectionManager,
 }
 
 impl Comet {
+    /// 使用连接管理器构造服务
     pub fn new(manager: ConnectionManager) -> Self {
         Self { manager }
     }

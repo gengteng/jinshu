@@ -1,13 +1,10 @@
-mod kafka;
-mod pulsar;
-
-use crate::kafka::KafkaReceiver;
-use crate::pulsar::PulsarReceiver;
 use jinshu_common::Config;
 use jinshu_queue::config::QueueConfig;
 use jinshu_queue::kafka::KafkaProducerConfig;
 use jinshu_queue::pulsar::PulsarProducerConfig;
-use jinshu_receiver::config::ReceiverConfig;
+use jinshu_receiver::KafkaReceiver;
+use jinshu_receiver::PulsarReceiver;
+use jinshu_receiver::ReceiverConfig;
 use jinshu_rpc::receiver::receiver_server::ReceiverServer;
 use jinshu_rpc::registry::etcd::{EtcdConfig, EtcdRegistry};
 use jinshu_rpc::registry::Registry;

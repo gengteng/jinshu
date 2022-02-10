@@ -1,7 +1,11 @@
+#![deny(missing_docs)]
+//! # Utils
+//!
 //! 锦书工具函数库
 //!
 
 mod error;
+/// 内存密文
 pub mod secret;
 
 pub use error::*;

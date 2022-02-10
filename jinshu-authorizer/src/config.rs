@@ -1,9 +1,11 @@
 use jinshu_rpc::config::ServiceConfig;
 use serde::{Deserialize, Serialize};
 
+/// Authorizer 的配置
 #[derive(Debug, Deserialize, Serialize)]
 // #[serde(default)]
 pub struct AuthorizerConfig {
+    /// Authorizer 服务配置
     #[serde(flatten)]
     pub service: ServiceConfig,
 }

@@ -3,13 +3,20 @@ use deadpool_redis::PoolConfig;
 use jinshu_utils::secret::Secret;
 use serde::{Deserialize, Serialize};
 
+/// Redis 的配置
 #[derive(Debug, Deserialize, Serialize)]
 pub struct RedisConfig {
+    /// 协议
     pub schema: String,
+    /// 主机名
     pub host: String,
+    /// 端口
     pub port: u16,
+    /// 密码
     pub password: Option<Secret>,
+    /// 数据库号
     pub db_number: i64,
+    /// 最大连接数
     pub max_connections: usize,
 }
 
