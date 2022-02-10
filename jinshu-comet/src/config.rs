@@ -3,6 +3,7 @@ use jinshu_rpc::config::ServiceConfig;
 use serde::{Deserialize, Serialize};
 use std::net::IpAddr;
 
+/// Comet 的配置
 #[derive(Debug, Deserialize, Serialize)]
 //#[serde(default)]
 pub struct CometConfig {

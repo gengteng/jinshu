@@ -1,4 +1,7 @@
-//! 锦书服务端模块公共库
+#![deny(missing_docs, unsafe_code)]
+//! # Common
+//!
+//! 服务端模块公共库
 //!
 
 mod conf;

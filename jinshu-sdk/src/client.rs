@@ -14,14 +14,19 @@ use tokio_util::codec::Framed;
 use url::Url;
 use uuid::Uuid;
 
+/// Client 的配置
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClientConfig {
+    /// Comet 的主机名
     pub comet_host: String,
+    /// Comet 的端口
     pub comet_port: u16,
+    /// Api 的 URL
     pub api_url: Url,
 }
 
 impl ClientConfig {
+    /// Comet 的地址
     pub fn comet_address(&self) -> String {
         format!("{}:{}", self.comet_host, self.comet_port)
     }
@@ -39,6 +44,7 @@ impl Default for ClientConfig {
     }
 }
 
+/// 客户端
 #[derive(Debug, Clone)]
 pub struct Client {
     config: ClientConfig,
@@ -46,6 +52,7 @@ pub struct Client {
 }
 
 impl Client {
+    /// 使用配置构造客户端
     pub fn new(config: impl Into<ClientConfig>) -> crate::Result<Self> {
         Ok(Self {
             config: config.into(),
@@ -55,10 +62,12 @@ impl Client {
         })
     }
 
+    /// 客户端内部使用的 HTTP 客户端
     pub fn http_client(&self) -> &reqwest::Client {
         &self.http
     }
 
+    /// 使用锦书用户 ID 及令牌登录
     pub async fn sign_in(&self, user_id: Uuid, token: Uuid) -> Result<UserAgent, LoginError> {
         let socket = TcpStream::connect(self.config.comet_address()).await?;
         let mut framed = Framed::new(socket, PduCodec::default());
@@ -181,8 +190,10 @@ async fn read_loop(
     Ok(())
 }
 
+/// 客户端发送 HTTP 请求时的 User-Agent 字段
 pub const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
 
+/// 用户代理
 #[derive(Debug)]
 pub struct UserAgent {
     user_id: Uuid,
@@ -190,19 +201,23 @@ pub struct UserAgent {
 }
 
 impl UserAgent {
+    /// 发送消息
     pub async fn send(&self, message: Message) -> crate::Result<()> {
         self.connection.send(message).await
     }
 
+    /// 接收消息
     pub async fn receive(&mut self) -> crate::Result<Message> {
         self.connection.receive().await
     }
 
+    /// 锦书用户 ID
     pub async fn user_id(&self) -> &Uuid {
         &self.user_id
     }
 }
 
+/// 用于收发 `T` 的连接
 #[derive(Debug)]
 pub struct Connection<T> {
     receiver: Receiver<T>,
@@ -210,10 +225,12 @@ pub struct Connection<T> {
 }
 
 impl<T> Connection<T> {
+    /// 构造连接
     pub(crate) fn new(receiver: Receiver<T>, sender: Sender<T>) -> Self {
         Self { receiver, sender }
     }
 
+    /// 发送 `T`
     pub async fn send(&self, message: T) -> crate::Result<()> {
         if self.sender.send(message).await.is_err() {
             return Err(crate::Error::ConnectionClosed);
@@ -221,6 +238,7 @@ impl<T> Connection<T> {
         Ok(())
     }
 
+    /// 接收 `T`
     pub async fn receive(&mut self) -> crate::Result<T> {
         match self.receiver.recv().await {
             Some(message) => Ok(message),

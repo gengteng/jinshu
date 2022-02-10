@@ -18,6 +18,7 @@ use tokio_util::codec::{FramedRead, FramedWrite};
 use tonic::transport::Channel;
 use uuid::Uuid;
 
+/// 连接管理器
 #[derive(Clone)]
 pub struct ConnectionManager {
     service_uri: String,
@@ -28,6 +29,7 @@ pub struct ConnectionManager {
 }
 
 impl ConnectionManager {
+    /// 构造连接管理器
     pub fn new(
         service_uri: &str,
         receiver: ReceiverClient<Channel>,
@@ -43,6 +45,7 @@ impl ConnectionManager {
         }
     }
 
+    /// 尝试接收一个用户登录
     pub async fn accept(&mut self, stream: TcpStream, codec: Codec) -> anyhow::Result<()> {
         let codec = PduCodec::new(codec);
         let (reader, writer) = stream.into_split();
@@ -143,7 +146,7 @@ impl ConnectionManager {
 
         let pusher = client_writer.clone();
         self.connections
-            .insert(user_id, Connection::create(user_id, pusher));
+            .insert(user_id, Connection::new(user_id, pusher));
         self.session_store.store(user_id, &self.service_uri).await?;
 
         let ss = self.session_store.clone();
@@ -224,16 +227,18 @@ impl ConnectionManager {
         Ok(())
     }
 
+    /// 根据用户ID获取对应的连接对象
     pub fn get(&self, user_id: Uuid) -> Option<RefMut<Uuid, Connection>> {
         self.connections.get_mut(&user_id)
     }
 
-    #[allow(dead_code)]
+    /// 删除用户ID对应的连接对象
     pub fn remove(&self, user_id: Uuid) -> Option<(Uuid, Connection)> {
         self.connections.remove(&user_id)
     }
 }
 
+/// 用户连接
 pub struct Connection {
     user_id: Uuid,
     pusher: Sender<Pdu>,
@@ -241,7 +246,8 @@ pub struct Connection {
 }
 
 impl Connection {
-    fn create(user_id: Uuid, pusher: Sender<Pdu>) -> Self {
+    /// 构造用户连接
+    fn new(user_id: Uuid, pusher: Sender<Pdu>) -> Self {
         Self {
             user_id,
             pusher,
@@ -249,12 +255,12 @@ impl Connection {
         }
     }
 
-    #[allow(dead_code)]
+    /// 连接的用户ID
     pub fn user_id(&self) -> &Uuid {
         &self.user_id
     }
 
-    #[allow(dead_code)]
+    /// 推送消息
     pub async fn push(&mut self, message: Message) -> anyhow::Result<()> {
         let id = self.id_gen.next_id();
         Ok(self

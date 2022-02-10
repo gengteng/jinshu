@@ -13,12 +13,18 @@ use std::task::{Context, Poll};
 use std::time::Duration;
 use tokio_stream::{Stream, StreamExt};
 
+/// Etcd 配置
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EtcdConfig {
+    /// 命名空间
     pub namespace: String,
+    /// Etcd 节点，使用逗号隔开
     pub endpoints: String,
+    /// 用户
     pub user: Option<User>,
+    /// 保活参数
     pub keep_alive: Option<KeepAlive>,
+    /// 存活时间
     pub ttl: u64,
 }
 
@@ -34,18 +40,25 @@ impl Default for EtcdConfig {
     }
 }
 
+/// 用户
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
+    /// 用户名
     pub username: String,
+    /// 密码
     pub password: String,
 }
 
+/// 保活参数
 #[derive(Debug, Serialize, Deserialize)]
 pub struct KeepAlive {
+    /// 间隔时间（毫秒）
     pub interval_ms: u64,
+    /// 超时时间（毫秒）
     pub timeout_ms: u64,
 }
 
+/// Etcd 注册中心
 #[derive(Clone)]
 pub struct EtcdRegistry {
     etcd: Client,
@@ -54,6 +67,7 @@ pub struct EtcdRegistry {
 }
 
 impl EtcdRegistry {
+    /// 使用配置构造注册中心
     pub async fn new(config: &EtcdConfig) -> anyhow::Result<Self> {
         let mut options = ConnectOptions::new();
         if let Some(User { username, password }) = &config.user {
@@ -79,10 +93,12 @@ impl EtcdRegistry {
         })
     }
 
+    /// 构造注册键前缀
     pub fn get_register_key_prefix(&self, name: &str) -> String {
         format!("{}.{}.", self.namespace, name)
     }
 
+    /// 构造注册键
     pub fn get_register_key(&self, name: &str, uri: &Uri) -> String {
         format!("{}.{}.{}", self.namespace, name, uri)
     }
@@ -182,6 +198,7 @@ impl Registry for EtcdRegistry {
     }
 }
 
+/// Etcd 监听器
 pub struct EtcdWatcher {
     watch: etcd_client::Watcher,
     stream: WatchStream,
@@ -189,6 +206,7 @@ pub struct EtcdWatcher {
 }
 
 impl EtcdWatcher {
+    /// 构造监听器
     pub fn new(watch: etcd_client::Watcher, stream: WatchStream) -> Self {
         Self {
             watch,

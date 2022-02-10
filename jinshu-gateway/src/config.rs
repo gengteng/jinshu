@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::net::IpAddr;
 
+/// Gateway 的配置
 #[derive(Debug, Deserialize, Serialize)]
 pub struct GatewayConfig {
     /// 监听的 IP 地址
