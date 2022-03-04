@@ -13,7 +13,7 @@ edition = "2021"
 [dependencies]
 clap = { version = "3", features = ["derive"]}
 serde = { version = "1", features = ["derive"] }
-config = "0.11"
+config = "0.12"
 
 thiserror = "1"
 

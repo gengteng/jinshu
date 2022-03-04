@@ -3,6 +3,7 @@ use jinshu_common::Config;
 use jinshu_protocol::{Content, Message};
 use jinshu_sdk::{Client, ClientConfig};
 use jinshu_tracing::config::TracingConfig;
+use jinshu_utils::shutdown_signal;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::sync::Arc;
@@ -129,6 +130,8 @@ async fn impersonate(
 
     users.write().await.insert(jinshu.user_id);
 
+    let mut shutdown = Box::pin(shutdown_signal());
+
     loop {
         tokio::select! {
             _ = sleep(Duration::from_secs(1)) => {
@@ -150,12 +153,16 @@ async fn impersonate(
             }
             receive = ua.receive() => {
                 match receive {
-                    Ok(message) => tracing::info!(?message, "Received a message"),
+                    Ok(message) => tracing::info!(%username, ?message, "Received a message"),
                     Err(error) => {
                         tracing::error!(%error, "Failed to receive messages");
                         break;
                     },
                 }
+            }
+            _ = &mut shutdown => {
+                tracing::info!(%username, "Received a shutdown signal");
+                break;
             }
         }
     }

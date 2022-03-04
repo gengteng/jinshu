@@ -11,5 +11,5 @@ repository = "https://github.com/gengteng/jinshu"
 edition = "2021"
 
 [dependencies]
-#tokio = { version = "~1.16.1", features = ["full"]}
+#tokio = { version = "1.17", features = ["full"]}
 #axum = "0.4"

@@ -1,7 +1,7 @@
 use axum::extract::{Extension, Json, Path};
 use axum::http::StatusCode;
 use axum::routing::{delete, get, post};
-use axum::{AddExtensionLayer, Router};
+use axum::Router;
 use deadpool_redis::{redis::AsyncCommands, Pool as RedisPool};
 use jinshu_common::Config;
 use jinshu_database::config::DatabaseConfig;
@@ -55,8 +55,8 @@ async fn main() -> anyhow::Result<()> {
         .route(route::USER, get(retrieve_user))
         .route(route::SIGN_IN, post(sign_in))
         .route(route::SIGN_OUT, delete(sign_out))
-        .layer(AddExtensionLayer::new(database))
-        .layer(AddExtensionLayer::new(redis))
+        .layer(Extension(database))
+        .layer(Extension(redis))
         .layer(tower_http::trace::TraceLayer::new_for_http());
 
     let addr = SocketAddr::new(ip, port);

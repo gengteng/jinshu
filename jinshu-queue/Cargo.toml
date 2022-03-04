@@ -18,7 +18,7 @@ rdkafka = { version = "0.28", features = ["cmake-build"] }
 pulsar = { version = "4.1", default-features = false, features = ["compression", "tokio-runtime"]}
 tracing = "0.1"
 async-trait = "0.1"
-tokio = { version = "~1.16.1", features = ["full"]}
+tokio = { version = "1.17", features = ["full"]}
 tokio-stream = "0.1"
 serde = { version = "1", features = ["derive"] }
 url = { version = "2.2", features = ["serde"]}

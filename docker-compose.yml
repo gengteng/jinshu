@@ -51,8 +51,8 @@ services:
     build: ./jinshu-receiver
     container_name: jinshu-receiver
     environment:
-      JINSHU_ETCD__ENDPOINTS: "etcd:2379"
-      JINSHU_KAFKA__SERVERS: "kafka:9092"
+      JINSHU__ETCD__ENDPOINTS: "etcd:2379"
+      JINSHU__KAFKA__SERVERS: "kafka:9092"
     links:
       - etcd
       - zookeeper
@@ -66,8 +66,8 @@ services:
     build: ./jinshu-authorizer
     container_name: jinshu-authorizer
     environment:
-      JINSHU_ETCD__ENDPOINTS: "etcd:2379"
-      JINSHU_REDIS__HOST: "redis"
+      JINSHU__ETCD__ENDPOINTS: "etcd:2379"
+      JINSHU__REDIS__HOST: "redis"
     links:
       - etcd
       - redis
@@ -80,8 +80,8 @@ services:
     build: ./jinshu-comet
     container_name: jinshu-comet
     environment:
-      JINSHU_ETCD__ENDPOINTS: "etcd:2379"
-      JINSHU_REDIS__HOST: "redis"
+      JINSHU__ETCD__ENDPOINTS: "etcd:2379"
+      JINSHU__REDIS__HOST: "redis"
     ports:
       - "9000:9000"
       - "9400:9400"
@@ -99,9 +99,9 @@ services:
     build: ./jinshu-storage
     container_name: jinshu-storage
     environment:
-      JINSHU_KAFKA__SERVERS: "kafka:9092"
-      JINSHU_KAFKA__GROUP_ID: "jinshu.storage"
-      JINSHU_DATABASE__HOST: "postgres"
+      JINSHU__KAFKA__SERVERS: "kafka:9092"
+      JINSHU__KAFKA__GROUP_ID: "jinshu.storage"
+      JINSHU__DATABASE__HOST: "postgres"
     links:
       - zookeeper
       - kafka
@@ -115,10 +115,10 @@ services:
     build: ./jinshu-pusher
     container_name: jinshu-pusher
     environment:
-      JINSHU_REDIS__HOST: "redis"
-      JINSHU_KAFKA__SERVERS: "kafka:9092"
-      JINSHU_ETCD__ENDPOINTS: "etcd:2379"
-      JINSHU_KAFKA__GROUP_ID: "jinshu.pusher"
+      JINSHU__REDIS__HOST: "redis"
+      JINSHU__KAFKA__SERVERS: "kafka:9092"
+      JINSHU__ETCD__ENDPOINTS: "etcd:2379"
+      JINSHU__KAFKA__GROUP_ID: "jinshu.pusher"
     links:
       - etcd
       - zookeeper
@@ -136,8 +136,8 @@ services:
     build: ./jinshu-gateway
     container_name: jinshu-gateway
     environment:
-      JINSHU_DATABASE__HOST: "postgres"
-      JINSHU_REDIS__HOST: "redis"
+      JINSHU__DATABASE__HOST: "postgres"
+      JINSHU__REDIS__HOST: "redis"
     ports:
       - "9200:9200"
     links:
@@ -153,9 +153,9 @@ services:
     build: ./jinshu-gateway/examples
     container_name: app-server
     environment:
-      JINSHU_REDIS__HOST: "redis"
-      JINSHU_DATABASE__HOST: "postgres"
-      JINSHU_APP__GATEWAY_HOST: "gateway"
+      JINSHU__REDIS__HOST: "redis"
+      JINSHU__DATABASE__HOST: "postgres"
+      JINSHU__APP__GATEWAY_HOST: "gateway"
     ports:
       - "8765:8765"
     links:
@@ -172,9 +172,9 @@ services:
     build: ./jinshu-sdk/examples
     container_name: app-client
     environment:
-      JINSHU_APP_CLIENT__SERVER_HOST: "app-server"
-      JINSHU_CLIENT__COMET_HOST: "comet"
-      JINSHU_CLIENT__API_URL: "http://api:9500"
+      JINSHU__APP_CLIENT__SERVER_HOST: "app-server"
+      JINSHU__CLIENT__COMET_HOST: "comet"
+      JINSHU__CLIENT__API_URL: "http://api:9500"
     links:
       - app-server
       - comet

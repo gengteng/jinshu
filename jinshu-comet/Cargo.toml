@@ -18,13 +18,13 @@ jinshu-common = { path = "../jinshu-common" }
 jinshu-redis = { path = "../jinshu-redis" }
 jinshu-tracing = { path = "../jinshu-tracing" }
 futures = "0.3"
-tokio = { version = "~1.16.1", features = ["full"]}
+tokio = { version = "1.17", features = ["full"]}
 tokio-stream = "0.1"
 tokio-util = { version = "0.7", features = ["codec"]}
 jinshu-rpc = { path = "../jinshu-rpc" }
 tonic = "0.6"
 async-trait = "0.1"
-config = "0.11"
+config = "0.12"
 uuid = "1.0.0-alpha.1"
 serde = { version = "1", features = ["derive"]}
 dashmap = "5.1"

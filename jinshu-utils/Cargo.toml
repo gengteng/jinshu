@@ -13,12 +13,12 @@ edition = "2021"
 [dependencies]
 if-addrs = "0.7"
 thiserror = "1"
-tokio = { version = "~1.16.1", features = ["rt", "sync", "signal"]}
+tokio = { version = "1.17", features = ["rt", "sync", "signal"]}
 zeroize = "1.4"
 tracing = "0.1"
 serde = { version = "1", features = ["derive"] }
 
 [dev-dependencies]
-tokio = { version = "~1.16.1", features = ["macros", "time", "rt-multi-thread"]}
+tokio = { version = "1.17", features = ["macros", "time", "rt-multi-thread"]}
 rand = "0.8"
 serde_json = "1"

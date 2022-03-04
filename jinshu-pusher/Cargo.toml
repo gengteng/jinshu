@@ -17,7 +17,7 @@ jinshu-rpc = { path = "../jinshu-rpc" }
 jinshu-common = { path = "../jinshu-common" }
 jinshu-queue = { path = "../jinshu-queue" }
 jinshu-redis = { path = "../jinshu-redis" }
-tokio = { version = "~1.16.1", features = ["full"]}
+tokio = { version = "1.17", features = ["full"]}
 tokio-stream = "0.1.8"
 async-trait = "0.1"
 serde = { version = "1", features = ["derive"] }

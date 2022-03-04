@@ -31,18 +31,18 @@ impl<'de, T: Deserialize<'de>> Config for T {
             ));
         }
 
-        let mut config = config::Config::new();
+        let mut config = config::Config::builder();
 
         for conf in configs.drain(..).rev() {
-            config = config.with_merged(config::File::from(match &config_root_path {
+            config = config.add_source(config::File::from(match &config_root_path {
                 None => conf,
                 Some(root) => root.join(conf),
-            }))?;
+            }));
         }
 
-        config = config.with_merged(Environment::new().prefix("JINSHU").separator("__"))?;
+        config = config.add_source(Environment::with_prefix("JINSHU").separator("__"));
 
-        Ok(config.try_into()?)
+        Ok(config.build()?.try_deserialize()?)
     }
 }
 

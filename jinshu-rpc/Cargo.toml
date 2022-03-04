@@ -13,7 +13,7 @@ edition = "2021"
 [dependencies]
 jinshu-utils = { path = "../jinshu-utils" }
 jinshu-protocol = { path = "../jinshu-protocol" }
-tokio = { version = "~1.16.1", features = ["rt", "signal"]}
+tokio = { version = "1.17", features = ["rt", "signal"]}
 tokio-stream = { version = "0.1", features = ["net"] }
 tracing = "0.1"
 tonic = "0.6"
@@ -36,5 +36,5 @@ tonic-build = { version = "0.6", features = ["prost"] }
 [dev-dependencies]
 rand = "0.8"
 uuid = { version = "1.0.0-alpha.1", features = ["v4"]}
-tokio = { version = "~1.16.1", features = ["macros", "rt-multi-thread", "sync"]}
+tokio = { version = "1.17", features = ["macros", "rt-multi-thread", "sync"]}
 tokio-stream = { version = "0.1", features = ["sync"] }
