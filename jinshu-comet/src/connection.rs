@@ -70,8 +70,7 @@ impl ConnectionManager {
                                 .send(
                                     Response::SignedIn {
                                         extension: extension
-                                            .map(|s| serde_json::Value::from_str(&s).ok())
-                                            .flatten(),
+                                            .and_then(|s| serde_json::Value::from_str(&s).ok()),
                                     }
                                     .to_pdu(id),
                                 )
