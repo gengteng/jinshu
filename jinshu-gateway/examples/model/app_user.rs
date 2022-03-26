@@ -13,7 +13,7 @@ pub struct Model {
     #[sea_orm(column_type = "Text")]
     pub password: String,
     pub gender: i32,
-    pub create_time: DateTime,
+    pub create_time: TimeDateTimeWithTimeZone,
     #[sea_orm(column_type = "Text", nullable)]
     pub jinshu_id: Option<String>,
 }

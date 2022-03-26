@@ -8,6 +8,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::sync::Arc;
 use std::time::Duration;
+use tokio::fs::OpenOptions;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::sync::RwLock;
 use tokio::time::sleep;
 use url::Url;
@@ -56,15 +58,7 @@ async fn main() -> anyhow::Result<()> {
         let u = users.clone();
 
         vec.push(async move {
-            if let Err(error) = impersonate(
-                c,
-                a,
-                format!("user{}", i),
-                Uuid::new_v4().simple().to_string(),
-                u,
-            )
-            .await
-            {
+            if let Err(error) = impersonate(c, a, format!("user{}", i), u).await {
                 tracing::error!(%error, "Failed to impersonate.")
             }
         });
@@ -79,33 +73,57 @@ async fn impersonate(
     client: Client,
     app_server_address: Url,
     username: impl Into<String>,
-    password: impl Into<String>,
     users: Arc<RwLock<HashSet<Uuid>>>,
 ) -> anyhow::Result<()> {
     let username = username.into();
-    let password = password.into();
 
-    let sign_param = AppSignParam {
-        username: &username,
-        password: &password,
-    };
-
-    let sign_up = client
-        .http_client()
-        .post(app_server_address.join("/sign_up")?)
-        .json(&sign_param)
-        .send()
+    let mut file = OpenOptions::new()
+        .write(true)
+        .read(true)
+        .create(true)
+        .open(&username)
         .await?;
 
-    if !sign_up.status().is_success() {
-        anyhow::bail!(
-            "Sign up error: {} {}",
-            sign_up.status(),
-            sign_up.text().await?
-        );
-    }
+    let mut password = String::with_capacity(32);
+    file.read_to_string(&mut password).await?;
 
-    tracing::info!(%username, "User signed up.");
+    let password_from_file = !password.is_empty();
+
+    let sign_param = if password_from_file {
+        tracing::info!(%username, "User password from file");
+        AppSignParam {
+            username: &username,
+            password: &password,
+        }
+    } else {
+        password = Uuid::new_v4().simple().to_string();
+
+        let sign_param = AppSignParam {
+            username: &username,
+            password: &password,
+        };
+
+        let sign_up = client
+            .http_client()
+            .post(app_server_address.join("/sign_up")?)
+            .json(&sign_param)
+            .send()
+            .await?;
+
+        if !sign_up.status().is_success() {
+            anyhow::bail!(
+                "Sign up error: {} {}",
+                sign_up.status(),
+                sign_up.text().await?
+            );
+        }
+
+        file.write_all(password.as_bytes()).await?;
+        tracing::info!(%username, "User signed up.");
+        sign_param
+    };
+
+    drop(file);
 
     let sign_in = client
         .http_client()
@@ -116,9 +134,9 @@ async fn impersonate(
 
     if !sign_in.status().is_success() {
         anyhow::bail!(
-            "Sign up error: {} {}",
-            sign_up.status(),
-            sign_up.text().await?
+            "Sign in error: {} {}",
+            sign_in.status(),
+            sign_in.text().await?
         );
     }
 

@@ -5,7 +5,7 @@ create table "user"
             primary key,
     external_id text                    not null,
     extension   json,
-    create_time timestamp default now() not null
+    create_time timestamptz default now() not null
 );
 
 alter table "user"
@@ -19,7 +19,7 @@ create table friend
     user_id     text                    not null,
     friend_id   text                    not null,
     comment     text,
-    create_time timestamp default now() not null,
+    create_time timestamptz default now() not null,
     constraint friend_pk
         primary key (user_id, friend_id)
 );
@@ -31,7 +31,7 @@ create table block
 (
     user_id     text                    not null,
     block_id    text                    not null,
-    create_time timestamp default now() not null,
+    create_time timestamptz default now() not null,
     constraint block_pk
         primary key (user_id, block_id)
 );
@@ -44,11 +44,11 @@ create table message
     id         text                    not null
         constraint message_pk
             primary key,
-    timestamp  timestamp               not null,
+    timestamp  timestamptz               not null,
     "from"     text                    not null,
     "to"       text                    not null,
     content    json                    not null,
-    store_time timestamp default now() not null
+    store_time timestamptz default now() not null
 );
 
 alter table message
@@ -60,7 +60,7 @@ create table "group"
         constraint group_pk
             primary key,
     name        text                    not null,
-    create_time timestamp default now() not null
+    create_time timestamptz default now() not null
 );
 
 alter table "group"
@@ -74,7 +74,7 @@ create table group_member
     group_id    text                    not null,
     user_id     text                    not null,
     group_name  text,
-    create_time timestamp default now() not null,
+    create_time timestamptz default now() not null,
     constraint group_member_pk
         primary key (group_id, user_id)
 );
@@ -92,7 +92,7 @@ create table app_user
     username    text                                  not null,
     password    text                                  not null,
     gender      int       default 0                   not null,
-    create_time timestamp default now()               not null,
+    create_time timestamptz default now()               not null,
     jinshu_id   text
 );
 

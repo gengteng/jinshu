@@ -12,5 +12,6 @@ edition = "2021"
 
 [dependencies]
 jinshu-utils = { path = "../jinshu-utils" }
-sea-orm = { version = "0.6", features = ["macros", "sqlx-postgres", "sqlx-mysql", "runtime-tokio-rustls"], default-features = false }
+sea-orm = { version = "0.7", features = ["macros", "sqlx-postgres", "sqlx-mysql", "runtime-tokio-rustls", "with-time"], default-features = false }
 serde = { version = "1", features = ["derive"]}
+time = { version = "0.2", features = ["serde"]}

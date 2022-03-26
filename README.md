@@ -39,7 +39,7 @@ $ cd jinshu
 # 编译并生成镜像
 $ docker build -t jinshu .
 # 运行所有节点
-$ docker-compose -f docker-compose.yml up -d
+$ docker-compose -f docker-compose.yml up -d --build
 ```
 
 注意：Kafka 的 topic 创建可能较慢，导致 pusher、storage 消费节点异常退出，请在 topic 创建完成后重启这些节点。

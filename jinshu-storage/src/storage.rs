@@ -1,9 +1,10 @@
 use async_trait::async_trait;
 use jinshu_protocol::Message;
 use jinshu_queue::{HandleResult, QueuedMessage, QueuedMessageHandler};
-use sea_orm::prelude::DateTime;
+use sea_orm::prelude::TimeDateTimeWithTimeZone;
 use sea_orm::ActiveModelTrait;
 use sea_orm::{ActiveValue, DatabaseConnection, Set};
+use std::time::Duration;
 
 /// 消息存储器
 #[derive(Clone)]
@@ -32,11 +33,12 @@ impl QueuedMessageHandler for Storage<DatabaseConnection> {
         };
 
         let secs = message.timestamp as i64 / 1000;
-        let nsecs = (message.timestamp as i64 - (secs * 1000)) as u32 * 1_000_000;
-
+        let nsecs = (message.timestamp as i64 - (secs * 1000)) as u64 * 1_000_000;
         let model = jinshu_database::message::ActiveModel {
             id: Set(message.id.as_simple().to_string()),
-            timestamp: Set(DateTime::from_timestamp(secs, nsecs)),
+            timestamp: Set(
+                TimeDateTimeWithTimeZone::from_unix_timestamp(secs) + Duration::from_nanos(nsecs)
+            ),
             from: Set(message.from.as_simple().to_string()),
             to: Set(message.to.as_simple().to_string()),
             content: Set(content),
